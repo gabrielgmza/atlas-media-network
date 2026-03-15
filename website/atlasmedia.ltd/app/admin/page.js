@@ -1,3 +1,5 @@
+import { revalidatePath } from "next/cache";
+
 async function publishArticle(formData) {
   "use server";
 
@@ -20,7 +22,7 @@ async function publishArticle(formData) {
     content
   };
 
-  await fetch(`${baseUrl}/api/articles`, {
+  const response = await fetch(`${baseUrl}/api/articles`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -29,14 +31,26 @@ async function publishArticle(formData) {
     body: JSON.stringify(payload),
     cache: "no-store"
   });
+
+  if (!response.ok) {
+    throw new Error("FAILED_TO_PUBLISH_ARTICLE");
+  }
+
+  revalidatePath("/");
+  revalidatePath("/argentina-post");
+  revalidatePath("/argentina-post-mendoza");
 }
+
+export const dynamic = "force-dynamic";
 
 export default function AdminPage() {
   return (
     <main style={{ maxWidth: 860, margin: "0 auto", padding: "48px 24px 80px", color: "#e5e7eb" }}>
       <a href="/" style={{ color: "#93c5fd", textDecoration: "none" }}>← Atlas Media Network</a>
       <h1 style={{ fontSize: 48, marginBottom: 12 }}>Atlas Admin</h1>
-      <p style={{ opacity: 0.8, marginBottom: 32 }}>Publish a new article into the editorial pilot.</p>
+      <p style={{ opacity: 0.8, marginBottom: 32 }}>
+        Publish a new article into the editorial pilot.
+      </p>
 
       <form action={publishArticle} style={{ display: "grid", gap: 16 }}>
         <select name="publication" required style={fieldStyle}>
