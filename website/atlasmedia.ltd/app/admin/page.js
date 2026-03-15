@@ -19,6 +19,10 @@ function makeId(publication) {
   return `${prefix}-${Date.now()}`;
 }
 
+function getPublicationName(publicationId) {
+  return atlasPublications.find((p) => p.id === publicationId)?.name || publicationId;
+}
+
 async function publishArticle(formData) {
   "use server";
 
@@ -28,13 +32,17 @@ async function publishArticle(formData) {
   const slug = String(formData.get("slug") || "").trim();
   const excerpt = String(formData.get("excerpt") || "").trim();
   const category = String(formData.get("category") || "").trim();
+  const section = String(formData.get("section") || "").trim();
+  const status = String(formData.get("status") || "published").trim();
+  const seoTitle = String(formData.get("seoTitle") || "").trim();
+  const seoDescription = String(formData.get("seoDescription") || "").trim();
 
   const content = String(formData.get("content") || "")
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
 
-  if (!publication || !authorId || !title || !excerpt || !category || content.length === 0) {
+  if (!publication || !authorId || !title || !excerpt || !category || !section || content.length === 0) {
     redirect(`/admin?publication=${publication}&error=missing-fields`);
   }
 
@@ -49,10 +57,18 @@ async function publishArticle(formData) {
       id: makeId(publication),
       slug: slug ? slugify(slug) : slugify(title),
       publication,
+      publicationName: getPublicationName(publication),
       title,
       excerpt,
       category,
+      section,
       author: journalist.signature,
+      authorId: journalist.id,
+      authorRole: journalist.role,
+      tone: journalist.tone,
+      status,
+      seoTitle: seoTitle || title,
+      seoDescription: seoDescription || excerpt,
       publishedAt: new Date().toISOString(),
       content
     });
@@ -78,27 +94,6 @@ async function publishArticle(formData) {
   redirect(`/admin?publication=${publication}&success=1`);
 }
 
-function SubmitButton({ disabled }) {
-  return (
-    <button
-      type="submit"
-      disabled={disabled}
-      onClick="this.disabled=true;this.innerText='Publishing...';this.form.submit();"
-      style={{
-        padding: "14px 18px",
-        borderRadius: 12,
-        border: "1px solid rgba(255,255,255,0.14)",
-        background: "rgba(255,255,255,0.08)",
-        color: "#fff",
-        opacity: disabled ? 0.55 : 1,
-        cursor: disabled ? "not-allowed" : "pointer"
-      }}
-    >
-      Publish article
-    </button>
-  );
-}
-
 export default function AdminPage({ searchParams }) {
   const selectedPublication =
     typeof searchParams?.publication === "string" ? searchParams.publication : "";
@@ -117,12 +112,10 @@ export default function AdminPage({ searchParams }) {
 
       <h1 style={{ fontSize: 48, marginBottom: 12 }}>Atlas Admin</h1>
       <p style={{ opacity: 0.8, marginBottom: 24 }}>
-        Publish a new article into the editorial pilot using AI newsroom authors.
+        Publish a new article into the editorial pilot using the structured editorial model.
       </p>
 
-      {success ? (
-        <div style={successStyle}>Article published successfully.</div>
-      ) : null}
+      {success ? <div style={successStyle}>Article published successfully.</div> : null}
 
       {error ? (
         <div style={errorStyle}>
@@ -204,6 +197,34 @@ export default function AdminPage({ searchParams }) {
         <div>
           <label style={labelStyle}>Category</label>
           <input name="category" placeholder="Category" required style={fieldStyle} disabled={!selectedPublication} />
+        </div>
+
+        <div>
+          <label style={labelStyle}>Section</label>
+          <input name="section" placeholder="Section" required style={fieldStyle} disabled={!selectedPublication} />
+        </div>
+
+        <div>
+          <label style={labelStyle}>Status</label>
+          <select name="status" defaultValue="published" style={fieldStyle} disabled={!selectedPublication}>
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+          </select>
+        </div>
+
+        <div>
+          <label style={labelStyle}>SEO title</label>
+          <input name="seoTitle" placeholder="SEO title (optional)" style={fieldStyle} disabled={!selectedPublication} />
+        </div>
+
+        <div>
+          <label style={labelStyle}>SEO description</label>
+          <input
+            name="seoDescription"
+            placeholder="SEO description (optional)"
+            style={fieldStyle}
+            disabled={!selectedPublication}
+          />
         </div>
 
         <div>

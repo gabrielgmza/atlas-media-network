@@ -15,10 +15,18 @@ function normalizeArticle(row) {
     id: row.id,
     slug: row.slug,
     publication: row.publication,
+    publicationName: row.publication_name || row.publicationName || row.publication,
     title: row.title,
     excerpt: row.excerpt,
     category: row.category,
+    section: row.section || row.category,
     author: row.author,
+    authorId: row.author_id || row.authorId || null,
+    authorRole: row.author_role || row.authorRole || null,
+    tone: row.tone || null,
+    status: row.status || "published",
+    seoTitle: row.seo_title || row.seoTitle || row.title,
+    seoDescription: row.seo_description || row.seoDescription || row.excerpt,
     publishedAt: row.published_at || row.publishedAt,
     content: Array.isArray(row.content) ? row.content : []
   };
@@ -36,7 +44,24 @@ async function readFromPostgres() {
   try {
     const db = getDb();
     const result = await db.query(`
-      select id, slug, publication, title, excerpt, category, author, published_at, content
+      select
+        id,
+        slug,
+        publication,
+        publication_name,
+        title,
+        excerpt,
+        category,
+        section,
+        author,
+        author_id,
+        author_role,
+        tone,
+        status,
+        seo_title,
+        seo_description,
+        published_at,
+        content
       from public.articles
       order by published_at desc
     `);
@@ -77,19 +102,60 @@ export async function createArticle(input) {
   const result = await db.query(
     `
       insert into public.articles (
-        id, slug, publication, title, excerpt, category, author, published_at, content
+        id,
+        slug,
+        publication,
+        publication_name,
+        title,
+        excerpt,
+        category,
+        section,
+        author,
+        author_id,
+        author_role,
+        tone,
+        status,
+        seo_title,
+        seo_description,
+        published_at,
+        content
       )
-      values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-      returning id, slug, publication, title, excerpt, category, author, published_at, content
+      values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+      returning
+        id,
+        slug,
+        publication,
+        publication_name,
+        title,
+        excerpt,
+        category,
+        section,
+        author,
+        author_id,
+        author_role,
+        tone,
+        status,
+        seo_title,
+        seo_description,
+        published_at,
+        content
     `,
     [
       input.id,
       input.slug,
       input.publication,
+      input.publicationName,
       input.title,
       input.excerpt,
       input.category,
+      input.section,
       input.author,
+      input.authorId,
+      input.authorRole,
+      input.tone,
+      input.status,
+      input.seoTitle,
+      input.seoDescription,
       input.publishedAt,
       JSON.stringify(input.content || [])
     ]

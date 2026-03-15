@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createArticle, getAllArticles } from "../../../lib/articles";
-import { getJournalistById } from "../../../lib/atlas-config";
+import { atlasPublications, getJournalistById } from "../../../lib/atlas-config";
 
 function slugify(value) {
   return String(value || "")
@@ -14,6 +14,10 @@ function slugify(value) {
 function makeId(publication) {
   const prefix = publication === "argentina-post-mendoza" ? "apm" : "ap";
   return `${prefix}-${Date.now()}`;
+}
+
+function getPublicationName(publicationId) {
+  return atlasPublications.find((p) => p.id === publicationId)?.name || publicationId;
 }
 
 export async function GET() {
@@ -40,14 +44,24 @@ export async function POST(request) {
     const body = await request.json();
     const journalist = body.authorId ? getJournalistById(body.authorId) : null;
 
+    const publicationName = getPublicationName(body.publication);
+
     const article = await createArticle({
       id: makeId(body.publication),
       slug: body.slug ? slugify(body.slug) : slugify(body.title),
       publication: body.publication,
+      publicationName,
       title: body.title,
       excerpt: body.excerpt,
       category: body.category,
+      section: body.section || body.category,
       author: journalist ? journalist.signature : body.author,
+      authorId: journalist ? journalist.id : null,
+      authorRole: journalist ? journalist.role : null,
+      tone: journalist ? journalist.tone : null,
+      status: body.status || "published",
+      seoTitle: body.seoTitle || body.title,
+      seoDescription: body.seoDescription || body.excerpt,
       publishedAt: body.publishedAt || new Date().toISOString(),
       content: Array.isArray(body.content) ? body.content : []
     });
