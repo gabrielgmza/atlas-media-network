@@ -54,6 +54,10 @@ export default async function HomePage() {
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 40 }}>
         <a href="/argentina-post" style={buttonStyle}>Argentina Post</a>
         <a href="/argentina-post-mendoza" style={buttonStyle}>Argentina Post Mendoza</a>
+        <a href="/governance" style={buttonStyle}>Governance</a>
+        <a href="/executive-board" style={buttonStyle}>Executive AI Board</a>
+        <a href="/newsroom" style={buttonStyle}>AI Newsroom</a>
+        <a href="/admin" style={buttonStyle}>Admin</a>
         <a href="/api/articles" style={buttonStyle}>API /api/articles</a>
       </div>
 
