@@ -64,6 +64,7 @@ export default async function HomePage() {
         <a href="/newsroom" style={buttonStyle}>AI Newsroom</a>
         <a href="/admin" style={buttonStyle}>Admin</a>
         <a href="/editorial" style={buttonStyle}>Editorial Desk</a>
+        <a href="/editorial-director" style={buttonStyle}>AI Editorial Director</a>
         <a href="/president" style={buttonStyle}>AI President OS</a>
         <a href="/api/articles" style={buttonStyle}>API /api/articles</a>
       </div>
