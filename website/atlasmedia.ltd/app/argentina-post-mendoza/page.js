@@ -5,8 +5,8 @@ export const metadata = {
   description: "Provincial publication pilot by Atlas Media Network."
 };
 
-export default function ArgentinaPostMendozaPage() {
-  const articles = getArticlesByPublication("argentina-post-mendoza");
+export default async function ArgentinaPostMendozaPage() {
+  const articles = await getArticlesByPublication("argentina-post-mendoza");
 
   return (
     <main style={{ maxWidth: 980, margin: "0 auto", padding: "48px 24px 80px" }}>

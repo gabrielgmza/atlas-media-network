@@ -5,8 +5,8 @@ export const metadata = {
   description: "National publication pilot by Atlas Media Network."
 };
 
-export default function ArgentinaPostPage() {
-  const articles = getArticlesByPublication("argentina-post");
+export default async function ArgentinaPostPage() {
+  const articles = await getArticlesByPublication("argentina-post");
 
   return (
     <main style={{ maxWidth: 980, margin: "0 auto", padding: "48px 24px 80px" }}>

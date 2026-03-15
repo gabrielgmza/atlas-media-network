@@ -32,8 +32,8 @@ const buttonStyle = {
   border: "1px solid rgba(255,255,255,0.12)"
 };
 
-export default function HomePage() {
-  const articles = getAllArticles();
+export default async function HomePage() {
+  const articles = await getAllArticles();
 
   return (
     <main style={{ maxWidth: 1120, margin: "0 auto", padding: "48px 24px 80px" }}>

@@ -1,14 +1,19 @@
-import { getArticleBySlug } from "../../../lib/articles";
+import { getArticleBySlug, getAllArticles } from "../../../lib/articles";
 import { notFound } from "next/navigation";
 
-export function generateMetadata({ params }) {
-  const article = getArticleBySlug(params.slug);
+export async function generateStaticParams() {
+  const articles = await getAllArticles();
+  return articles.map((article) => ({ slug: article.slug }));
+}
+
+export async function generateMetadata({ params }) {
+  const article = await getArticleBySlug(params.slug);
   if (!article) return { title: "Article not found" };
   return { title: article.title, description: article.excerpt };
 }
 
-export default function ArticlePage({ params }) {
-  const article = getArticleBySlug(params.slug);
+export default async function ArticlePage({ params }) {
+  const article = await getArticleBySlug(params.slug);
 
   if (!article) {
     notFound();

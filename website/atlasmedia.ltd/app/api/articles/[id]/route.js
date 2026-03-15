@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getArticleById } from "../../../../lib/articles";
 
 export async function GET(_request, { params }) {
-  const article = getArticleById(params.id);
+  const article = await getArticleById(params.id);
 
   if (!article) {
     return NextResponse.json(
