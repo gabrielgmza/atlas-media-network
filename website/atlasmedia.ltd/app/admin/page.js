@@ -1,14 +1,26 @@
 import { revalidatePath } from "next/cache";
-import { atlasPublications, getJournalistsByPublication } from "../../lib/atlas-config";
+import { redirect } from "next/navigation";
+import { atlasPublications, getJournalistsByPublication, getJournalistById } from "../../lib/atlas-config";
+import { createArticle } from "../../lib/articles";
 
 export const dynamic = "force-dynamic";
 
+function slugify(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function makeId(publication) {
+  const prefix = publication === "argentina-post-mendoza" ? "apm" : "ap";
+  return `${prefix}-${Date.now()}`;
+}
+
 async function publishArticle(formData) {
   "use server";
-
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
   const publication = String(formData.get("publication") || "").trim();
   const authorId = String(formData.get("authorId") || "").trim();
@@ -23,41 +35,42 @@ async function publishArticle(formData) {
     .filter(Boolean);
 
   if (!publication || !authorId || !title || !excerpt || !category || content.length === 0) {
-    throw new Error("MISSING_REQUIRED_FIELDS");
+    redirect(`/admin?publication=${publication}&error=missing-fields`);
   }
 
-  const response = await fetch(`${baseUrl}/api/articles`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-atlas-admin-token": process.env.ATLAS_ADMIN_TOKEN || ""
-    },
-    body: JSON.stringify({
-      publication,
-      title,
-      slug,
-      excerpt,
-      category,
-      authorId,
-      content
-    }),
-    cache: "no-store"
+  const journalist = getJournalistById(authorId);
+
+  if (!journalist) {
+    redirect(`/admin?publication=${publication}&error=invalid-author`);
+  }
+
+  await createArticle({
+    id: makeId(publication),
+    slug: slug ? slugify(slug) : slugify(title),
+    publication,
+    title,
+    excerpt,
+    category,
+    author: journalist.signature,
+    publishedAt: new Date().toISOString(),
+    content
   });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`FAILED_TO_PUBLISH_ARTICLE: ${text}`);
-  }
 
   revalidatePath("/");
   revalidatePath("/argentina-post");
   revalidatePath("/argentina-post-mendoza");
-  revalidatePath("/admin");
+  revalidatePath("/api/articles");
+
+  redirect(`/admin?publication=${publication}&success=1`);
 }
 
 export default function AdminPage({ searchParams }) {
   const selectedPublication =
     typeof searchParams?.publication === "string" ? searchParams.publication : "";
+
+  const success = searchParams?.success === "1";
+  const error =
+    typeof searchParams?.error === "string" ? searchParams.error : "";
 
   const availableJournalists = selectedPublication
     ? getJournalistsByPublication(selectedPublication)
@@ -71,6 +84,18 @@ export default function AdminPage({ searchParams }) {
       <p style={{ opacity: 0.8, marginBottom: 24 }}>
         Publish a new article into the editorial pilot using AI newsroom authors.
       </p>
+
+      {success ? (
+        <div style={successStyle}>Article published successfully.</div>
+      ) : null}
+
+      {error ? (
+        <div style={errorStyle}>
+          {error === "missing-fields" && "Please complete all required fields."}
+          {error === "invalid-author" && "Selected journalist is invalid."}
+          {!["missing-fields", "invalid-author"].includes(error) && "An error occurred while publishing."}
+        </div>
+      ) : null}
 
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 28 }}>
         {atlasPublications.map((publication) => (
@@ -111,7 +136,7 @@ export default function AdminPage({ searchParams }) {
 
         <div>
           <label style={labelStyle}>Journalist</label>
-          <select name="authorId" required style={fieldStyle} disabled={!selectedPublication}>
+          <select name="authorId" required style={fieldStyle} disabled={!selectedPublication} defaultValue="">
             <option value="">
               {selectedPublication ? "Select journalist" : "Choose a publication first"}
             </option>
@@ -190,4 +215,22 @@ const fieldStyle = {
   background: "rgba(255,255,255,0.04)",
   color: "#fff",
   font: "inherit"
+};
+
+const successStyle = {
+  marginBottom: 20,
+  padding: "14px 16px",
+  borderRadius: 12,
+  border: "1px solid rgba(34,197,94,0.35)",
+  background: "rgba(34,197,94,0.12)",
+  color: "#dcfce7"
+};
+
+const errorStyle = {
+  marginBottom: 20,
+  padding: "14px 16px",
+  borderRadius: 12,
+  border: "1px solid rgba(239,68,68,0.35)",
+  background: "rgba(239,68,68,0.12)",
+  color: "#fecaca"
 };
