@@ -1,0 +1,8 @@
+{
+"name":"atlas-media-network",
+"version":"1.0.0",
+"main":"core/api/server.js",
+"dependencies":{
+"express":"^4.18.2"
+}
+}
