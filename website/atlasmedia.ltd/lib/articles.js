@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
-import { getSupabaseAdmin } from "./supabase";
+import { getDb } from "./db";
 
 const articlesFilePath = path.join(process.cwd(), "data", "articles.json");
 
@@ -24,26 +24,33 @@ function normalizeArticle(row) {
   };
 }
 
-async function readFromSupabase() {
-  const supabase = getSupabaseAdmin();
-  if (!supabase) return null;
+async function readFromPostgres() {
+  const hasDbConfig =
+    process.env.POSTGRES_HOST &&
+    process.env.POSTGRES_DATABASE &&
+    process.env.POSTGRES_USER &&
+    process.env.POSTGRES_PASSWORD;
 
-  const { data, error } = await supabase
-    .from("articles")
-    .select("*")
-    .order("published_at", { ascending: false });
+  if (!hasDbConfig) return null;
 
-  if (error) {
-    console.error("SUPABASE_READ_ERROR", error.message);
+  try {
+    const db = getDb();
+    const result = await db.query(`
+      select id, slug, publication, title, excerpt, category, author, published_at, content
+      from public.articles
+      order by published_at desc
+    `);
+
+    return result.rows.map(normalizeArticle);
+  } catch (error) {
+    console.error("POSTGRES_READ_ERROR", error.message);
     return null;
   }
-
-  return (data || []).map(normalizeArticle);
 }
 
 export async function getAllArticles() {
-  const supabaseArticles = await readFromSupabase();
-  if (supabaseArticles) return supabaseArticles;
+  const dbArticles = await readFromPostgres();
+  if (dbArticles) return dbArticles;
 
   const articles = await readArticlesFile();
   return [...articles].sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
@@ -65,32 +72,28 @@ export async function getArticlesByPublication(publication) {
 }
 
 export async function createArticle(input) {
-  const supabase = getSupabaseAdmin();
-  if (!supabase) {
-    throw new Error("SUPABASE_NOT_CONFIGURED");
-  }
+  const db = getDb();
 
-  const payload = {
-    id: input.id,
-    slug: input.slug,
-    publication: input.publication,
-    title: input.title,
-    excerpt: input.excerpt,
-    category: input.category,
-    author: input.author,
-    published_at: input.publishedAt,
-    content: input.content
-  };
+  const result = await db.query(
+    `
+      insert into public.articles (
+        id, slug, publication, title, excerpt, category, author, published_at, content
+      )
+      values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+      returning id, slug, publication, title, excerpt, category, author, published_at, content
+    `,
+    [
+      input.id,
+      input.slug,
+      input.publication,
+      input.title,
+      input.excerpt,
+      input.category,
+      input.author,
+      input.publishedAt,
+      JSON.stringify(input.content || [])
+    ]
+  );
 
-  const { data, error } = await supabase
-    .from("articles")
-    .insert(payload)
-    .select()
-    .single();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return normalizeArticle(data);
+  return normalizeArticle(result.rows[0]);
 }
