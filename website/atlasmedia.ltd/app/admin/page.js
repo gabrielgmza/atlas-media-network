@@ -44,17 +44,31 @@ async function publishArticle(formData) {
     redirect(`/admin?publication=${publication}&error=invalid-author`);
   }
 
-  await createArticle({
-    id: makeId(publication),
-    slug: slug ? slugify(slug) : slugify(title),
-    publication,
-    title,
-    excerpt,
-    category,
-    author: journalist.signature,
-    publishedAt: new Date().toISOString(),
-    content
-  });
+  try {
+    await createArticle({
+      id: makeId(publication),
+      slug: slug ? slugify(slug) : slugify(title),
+      publication,
+      title,
+      excerpt,
+      category,
+      author: journalist.signature,
+      publishedAt: new Date().toISOString(),
+      content
+    });
+  } catch (error) {
+    const message = String(error?.message || "");
+
+    if (
+      message.includes("duplicate key") ||
+      message.includes("articles_slug_key") ||
+      message.includes("unique")
+    ) {
+      redirect(`/admin?publication=${publication}&error=duplicate-slug`);
+    }
+
+    redirect(`/admin?publication=${publication}&error=publish-failed`);
+  }
 
   revalidatePath("/");
   revalidatePath("/argentina-post");
@@ -62,6 +76,27 @@ async function publishArticle(formData) {
   revalidatePath("/api/articles");
 
   redirect(`/admin?publication=${publication}&success=1`);
+}
+
+function SubmitButton({ disabled }) {
+  return (
+    <button
+      type="submit"
+      disabled={disabled}
+      onClick="this.disabled=true;this.innerText='Publishing...';this.form.submit();"
+      style={{
+        padding: "14px 18px",
+        borderRadius: 12,
+        border: "1px solid rgba(255,255,255,0.14)",
+        background: "rgba(255,255,255,0.08)",
+        color: "#fff",
+        opacity: disabled ? 0.55 : 1,
+        cursor: disabled ? "not-allowed" : "pointer"
+      }}
+    >
+      Publish article
+    </button>
+  );
 }
 
 export default function AdminPage({ searchParams }) {
@@ -93,7 +128,10 @@ export default function AdminPage({ searchParams }) {
         <div style={errorStyle}>
           {error === "missing-fields" && "Please complete all required fields."}
           {error === "invalid-author" && "Selected journalist is invalid."}
-          {!["missing-fields", "invalid-author"].includes(error) && "An error occurred while publishing."}
+          {error === "duplicate-slug" && "A note with that slug already exists. Change the title or slug and try again."}
+          {error === "publish-failed" && "An error occurred while publishing."}
+          {!["missing-fields", "invalid-author", "duplicate-slug", "publish-failed"].includes(error) &&
+            "An error occurred while publishing."}
         </div>
       ) : null}
 
