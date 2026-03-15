@@ -1,8 +1,9 @@
 {
-"name":"atlas-media-network",
-"version":"1.0.0",
-"main":"core/api/server.js",
-"dependencies":{
-"express":"^4.18.2"
-}
+  "name": "atlas-media-network",
+  "version": "1.0.0",
+  "description": "Atlas Media Network AI Systems",
+  "main": "index.js",
+  "scripts": {
+    "newsroom": "node ai/newsroom/newsroom-runner.js"
+  }
 }
