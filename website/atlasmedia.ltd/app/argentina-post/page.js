@@ -19,7 +19,10 @@ export default async function ArgentinaPostPage() {
       <div style={{ display: "grid", gap: 20 }}>
         {articles.map((article) => (
           <article key={article.id} style={{ border: "1px solid rgba(255,255,255,0.12)", borderRadius: 16, padding: 20 }}>
-            <div style={{ fontSize: 12, opacity: 0.65 }}>{article.category} · {article.author}</div>
+            <div style={{ fontSize: 12, opacity: 0.65 }}>
+              {article.section} · {article.author}
+              {article.authorRole ? ` · ${article.authorRole}` : ""}
+            </div>
             <h2>{article.title}</h2>
             <p style={{ opacity: 0.85 }}>{article.excerpt}</p>
             <a href={`/noticias/${article.slug}`} style={{ color: "#93c5fd", textDecoration: "none" }}>

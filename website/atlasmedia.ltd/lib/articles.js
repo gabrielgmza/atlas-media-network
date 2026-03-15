@@ -81,18 +81,28 @@ export async function getAllArticles() {
   return [...articles].sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 }
 
+export async function getPublishedArticles() {
+  const articles = await getAllArticles();
+  return articles.filter((article) => article.status === "published");
+}
+
+export async function getDraftArticles() {
+  const articles = await getAllArticles();
+  return articles.filter((article) => article.status === "draft");
+}
+
 export async function getArticleById(id) {
   const articles = await getAllArticles();
   return articles.find((article) => article.id === id) || null;
 }
 
 export async function getArticleBySlug(slug) {
-  const articles = await getAllArticles();
+  const articles = await getPublishedArticles();
   return articles.find((article) => article.slug === slug) || null;
 }
 
 export async function getArticlesByPublication(publication) {
-  const articles = await getAllArticles();
+  const articles = await getPublishedArticles();
   return articles.filter((article) => article.publication === publication);
 }
 

@@ -1,4 +1,4 @@
-import { getAllArticles } from "../lib/articles";
+import { getPublishedArticles } from "../lib/articles";
 
 export const dynamic = "force-dynamic";
 
@@ -13,10 +13,15 @@ function Card({ article }) {
       }}
     >
       <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 10 }}>
-        {article.publication} · {article.category} · {new Date(article.publishedAt).toLocaleString()}
+        {article.publicationName} · {article.section} · {new Date(article.publishedAt).toLocaleString()}
       </div>
       <h3 style={{ marginTop: 0 }}>{article.title}</h3>
       <p style={{ opacity: 0.85 }}>{article.excerpt}</p>
+      <div style={{ fontSize: 13, opacity: 0.72, marginBottom: 12 }}>
+        {article.author}
+        {article.authorRole ? ` — ${article.authorRole}` : ""}
+        {article.tone ? ` · Tone: ${article.tone}` : ""}
+      </div>
       <a href={`/noticias/${article.slug}`} style={{ color: "#93c5fd", textDecoration: "none" }}>
         Read article →
       </a>
@@ -35,7 +40,7 @@ const buttonStyle = {
 };
 
 export default async function HomePage() {
-  const articles = await getAllArticles();
+  const articles = await getPublishedArticles();
 
   return (
     <main style={{ maxWidth: 1120, margin: "0 auto", padding: "48px 24px 80px" }}>
@@ -58,11 +63,12 @@ export default async function HomePage() {
         <a href="/executive-board" style={buttonStyle}>Executive AI Board</a>
         <a href="/newsroom" style={buttonStyle}>AI Newsroom</a>
         <a href="/admin" style={buttonStyle}>Admin</a>
+        <a href="/editorial" style={buttonStyle}>Editorial Desk</a>
         <a href="/api/articles" style={buttonStyle}>API /api/articles</a>
       </div>
 
       <section>
-        <h2 style={{ marginBottom: 20 }}>Latest articles</h2>
+        <h2 style={{ marginBottom: 20 }}>Published articles</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 20 }}>
           {articles.map((article) => <Card key={article.id} article={article} />)}
         </div>
