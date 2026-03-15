@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Argentina Post</title>
+
+<style>
+
+body{
+font-family: Arial;
+background:#111;
+color:white;
+padding:40px;
+}
+
+.article{
+border-bottom:1px solid #333;
+margin-bottom:20px;
+padding-bottom:20px;
+}
+
+h1{
+font-size:40px;
+}
+
+h2{
+color:#00d4ff;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Argentina Post</h1>
+
+<div id="articles"></div>
+
+<script>
+
+fetch("/articles")
+.then(res => res.json())
+.then(data => {
+
+const container = document.getElementById("articles")
+
+data.forEach(article => {
+
+const div = document.createElement("div")
+div.className="article"
+
+div.innerHTML = `
+<h2>${article.title}</h2>
+<p><b>${article.author}</b> - ${article.date}</p>
+<p>${article.content}</p>
+`
+
+container.appendChild(div)
+
+})
+
+})
+
+</script>
+
+</body>
+</html>

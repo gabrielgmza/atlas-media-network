@@ -4,6 +4,7 @@
 "description":"Atlas Media Network AI Systems",
 "scripts":{
 "newsroom":"node ai/newsroom/newsroom-runner.js",
-"simulate":"node ai/simulation/day-simulation.js"
+"simulate":"node ai/simulation/day-simulation.js",
+"cms":"node platform/cms/server.js"
 }
 }

@@ -1,15 +1,16 @@
+const store = require("../../platform/cms/article-store")
 
 class Publisher {
 
-    publish(article){
+publish(article){
 
-        console.log("Publishing article...")
-        console.log("Title:", article.title)
-        console.log("Author:", article.author)
-        console.log("Category:", article.category)
-        console.log("Content:", article.content)
+const saved = store.saveArticle(article)
 
-    }
+console.log("Article published and stored")
+
+console.log(saved)
+
+}
 
 }
 

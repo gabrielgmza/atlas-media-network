@@ -1,0 +1,67 @@
+{
+  "articles": [
+    {
+      "title": "Incendio en Godoy Cruz",
+      "author": "Sofia Luna",
+      "category": "viral",
+      "content": "Internet explodes after Incendio en Godoy Cruz. The trend is spreading rapidly on social networks.",
+      "id": 1773550846742
+    },
+    {
+      "title": "Nuevo proyecto tecnológico en la provincia",
+      "author": "Sofia Luna",
+      "category": "viral",
+      "content": "Internet explodes after Nuevo proyecto tecnológico en la provincia. The trend is spreading rapidly on social networks.",
+      "id": 1773550846748
+    },
+    {
+      "title": "Evento cultural en Maipú",
+      "author": "Sofia Luna",
+      "category": "viral",
+      "content": "Internet explodes after Evento cultural en Maipú. The trend is spreading rapidly on social networks.",
+      "id": 1773550846750
+    },
+    {
+      "title": "Robos en el centro de Mendoza",
+      "author": "Diego Fuentes",
+      "category": "economy",
+      "content": "Economic impact of Robos en el centro de Mendoza. Analysts warn the situation could affect local markets.",
+      "id": 1773550846752
+    },
+    {
+      "title": "Nuevo aumento del dólar en Argentina",
+      "author": "Marcos Rivas",
+      "category": "police",
+      "content": "Breaking crime news: Nuevo aumento del dólar en Argentina. Police sources confirmed the event minutes ago.",
+      "id": 1773551146397
+    },
+    {
+      "title": "Incendio en Godoy Cruz",
+      "author": "Diego Fuentes",
+      "category": "economy",
+      "content": "Economic impact of Incendio en Godoy Cruz. Analysts warn the situation could affect local markets.",
+      "id": 1773551146401
+    },
+    {
+      "title": "Accidente en Ruta 7 Mendoza",
+      "author": "Marcos Rivas",
+      "category": "police",
+      "content": "Breaking crime news: Accidente en Ruta 7 Mendoza. Police sources confirmed the event minutes ago.",
+      "id": 1773551160294
+    },
+    {
+      "title": "Nuevo proyecto tecnológico en la provincia",
+      "author": "Lucia Herrera",
+      "category": "politics",
+      "content": "Political analysis about Nuevo proyecto tecnológico en la provincia. Sources close to the government confirm growing tension.",
+      "id": 1773551160301
+    },
+    {
+      "title": "Robos en el centro de Mendoza",
+      "author": "Carla Torres",
+      "category": "society",
+      "content": "Community reactions emerge after Robos en el centro de Mendoza. Residents express concern.",
+      "id": 1773551160305
+    }
+  ]
+}

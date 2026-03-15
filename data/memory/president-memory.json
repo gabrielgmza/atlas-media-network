@@ -1,0 +1,260 @@
+{
+  "events": [
+    {
+      "time": "2026-03-15T04:56:58.012Z",
+      "event": "Trend detected: Accidente en Ruta 7 Mendoza"
+    },
+    {
+      "time": "2026-03-15T04:56:58.014Z",
+      "event": "Story rejected: Accidente en Ruta 7 Mendoza"
+    },
+    {
+      "time": "2026-03-15T04:56:58.016Z",
+      "event": "Trend detected: Nuevo aumento del dólar en Argentina"
+    },
+    {
+      "time": "2026-03-15T04:56:58.017Z",
+      "event": "Story rejected: Nuevo aumento del dólar en Argentina"
+    },
+    {
+      "time": "2026-03-15T04:56:58.017Z",
+      "event": "Trend detected: Incendio en Godoy Cruz"
+    },
+    {
+      "time": "2026-03-15T04:56:58.018Z",
+      "event": "Story rejected: Incendio en Godoy Cruz"
+    },
+    {
+      "time": "2026-03-15T04:56:58.018Z",
+      "event": "Trend detected: Festival gastronómico en Mendoza"
+    },
+    {
+      "time": "2026-03-15T04:56:58.018Z",
+      "event": "Story rejected: Festival gastronómico en Mendoza"
+    },
+    {
+      "time": "2026-03-15T04:56:58.019Z",
+      "event": "Trend detected: Nuevo proyecto tecnológico en la provincia"
+    },
+    {
+      "time": "2026-03-15T04:56:58.020Z",
+      "event": "Story rejected: Nuevo proyecto tecnológico en la provincia"
+    },
+    {
+      "time": "2026-03-15T04:56:58.021Z",
+      "event": "Trend detected: Problemas de tránsito en Guaymallén"
+    },
+    {
+      "time": "2026-03-15T04:56:58.021Z",
+      "event": "Story rejected: Problemas de tránsito en Guaymallén"
+    },
+    {
+      "time": "2026-03-15T04:56:58.021Z",
+      "event": "Trend detected: Evento cultural en Maipú"
+    },
+    {
+      "time": "2026-03-15T04:56:58.022Z",
+      "event": "Story rejected: Evento cultural en Maipú"
+    },
+    {
+      "time": "2026-03-15T04:56:58.022Z",
+      "event": "Trend detected: Robos en el centro de Mendoza"
+    },
+    {
+      "time": "2026-03-15T04:56:58.022Z",
+      "event": "Story rejected: Robos en el centro de Mendoza"
+    },
+    {
+      "time": "2026-03-15T05:00:46.732Z",
+      "event": "Trend detected: Accidente en Ruta 7 Mendoza"
+    },
+    {
+      "time": "2026-03-15T05:00:46.737Z",
+      "event": "Story rejected: Accidente en Ruta 7 Mendoza"
+    },
+    {
+      "time": "2026-03-15T05:00:46.739Z",
+      "event": "Trend detected: Nuevo aumento del dólar en Argentina"
+    },
+    {
+      "time": "2026-03-15T05:00:46.740Z",
+      "event": "Story rejected: Nuevo aumento del dólar en Argentina"
+    },
+    {
+      "time": "2026-03-15T05:00:46.741Z",
+      "event": "Trend detected: Incendio en Godoy Cruz"
+    },
+    {
+      "time": "2026-03-15T05:00:46.746Z",
+      "event": "Article published: Incendio en Godoy Cruz"
+    },
+    {
+      "time": "2026-03-15T05:00:46.746Z",
+      "event": "Trend detected: Festival gastronómico en Mendoza"
+    },
+    {
+      "time": "2026-03-15T05:00:46.747Z",
+      "event": "Story rejected: Festival gastronómico en Mendoza"
+    },
+    {
+      "time": "2026-03-15T05:00:46.747Z",
+      "event": "Trend detected: Nuevo proyecto tecnológico en la provincia"
+    },
+    {
+      "time": "2026-03-15T05:00:46.749Z",
+      "event": "Article published: Nuevo proyecto tecnológico en la provincia"
+    },
+    {
+      "time": "2026-03-15T05:00:46.749Z",
+      "event": "Trend detected: Problemas de tránsito en Guaymallén"
+    },
+    {
+      "time": "2026-03-15T05:00:46.750Z",
+      "event": "Story rejected: Problemas de tránsito en Guaymallén"
+    },
+    {
+      "time": "2026-03-15T05:00:46.750Z",
+      "event": "Trend detected: Evento cultural en Maipú"
+    },
+    {
+      "time": "2026-03-15T05:00:46.751Z",
+      "event": "Article published: Evento cultural en Maipú"
+    },
+    {
+      "time": "2026-03-15T05:00:46.752Z",
+      "event": "Trend detected: Robos en el centro de Mendoza"
+    },
+    {
+      "time": "2026-03-15T05:00:46.754Z",
+      "event": "Article published: Robos en el centro de Mendoza"
+    },
+    {
+      "time": "2026-03-15T05:05:46.391Z",
+      "event": "Trend detected: Accidente en Ruta 7 Mendoza"
+    },
+    {
+      "time": "2026-03-15T05:05:46.396Z",
+      "event": "Story rejected: Accidente en Ruta 7 Mendoza"
+    },
+    {
+      "time": "2026-03-15T05:05:46.396Z",
+      "event": "Trend detected: Nuevo aumento del dólar en Argentina"
+    },
+    {
+      "time": "2026-03-15T05:05:46.399Z",
+      "event": "Article published: Nuevo aumento del dólar en Argentina"
+    },
+    {
+      "time": "2026-03-15T05:05:46.401Z",
+      "event": "Trend detected: Incendio en Godoy Cruz"
+    },
+    {
+      "time": "2026-03-15T05:05:46.402Z",
+      "event": "Article published: Incendio en Godoy Cruz"
+    },
+    {
+      "time": "2026-03-15T05:05:46.403Z",
+      "event": "Trend detected: Festival gastronómico en Mendoza"
+    },
+    {
+      "time": "2026-03-15T05:05:46.404Z",
+      "event": "Story rejected: Festival gastronómico en Mendoza"
+    },
+    {
+      "time": "2026-03-15T05:05:46.405Z",
+      "event": "Trend detected: Nuevo proyecto tecnológico en la provincia"
+    },
+    {
+      "time": "2026-03-15T05:05:46.405Z",
+      "event": "Story rejected: Nuevo proyecto tecnológico en la provincia"
+    },
+    {
+      "time": "2026-03-15T05:05:46.406Z",
+      "event": "Trend detected: Problemas de tránsito en Guaymallén"
+    },
+    {
+      "time": "2026-03-15T05:05:46.406Z",
+      "event": "Story rejected: Problemas de tránsito en Guaymallén"
+    },
+    {
+      "time": "2026-03-15T05:05:46.407Z",
+      "event": "Trend detected: Evento cultural en Maipú"
+    },
+    {
+      "time": "2026-03-15T05:05:46.407Z",
+      "event": "Story rejected: Evento cultural en Maipú"
+    },
+    {
+      "time": "2026-03-15T05:05:46.408Z",
+      "event": "Trend detected: Robos en el centro de Mendoza"
+    },
+    {
+      "time": "2026-03-15T05:05:46.408Z",
+      "event": "Story rejected: Robos en el centro de Mendoza"
+    },
+    {
+      "time": "2026-03-15T05:06:00.291Z",
+      "event": "Trend detected: Accidente en Ruta 7 Mendoza"
+    },
+    {
+      "time": "2026-03-15T05:06:00.295Z",
+      "event": "Article published: Accidente en Ruta 7 Mendoza"
+    },
+    {
+      "time": "2026-03-15T05:06:00.296Z",
+      "event": "Trend detected: Nuevo aumento del dólar en Argentina"
+    },
+    {
+      "time": "2026-03-15T05:06:00.297Z",
+      "event": "Story rejected: Nuevo aumento del dólar en Argentina"
+    },
+    {
+      "time": "2026-03-15T05:06:00.297Z",
+      "event": "Trend detected: Incendio en Godoy Cruz"
+    },
+    {
+      "time": "2026-03-15T05:06:00.298Z",
+      "event": "Story rejected: Incendio en Godoy Cruz"
+    },
+    {
+      "time": "2026-03-15T05:06:00.299Z",
+      "event": "Trend detected: Festival gastronómico en Mendoza"
+    },
+    {
+      "time": "2026-03-15T05:06:00.299Z",
+      "event": "Story rejected: Festival gastronómico en Mendoza"
+    },
+    {
+      "time": "2026-03-15T05:06:00.300Z",
+      "event": "Trend detected: Nuevo proyecto tecnológico en la provincia"
+    },
+    {
+      "time": "2026-03-15T05:06:00.302Z",
+      "event": "Article published: Nuevo proyecto tecnológico en la provincia"
+    },
+    {
+      "time": "2026-03-15T05:06:00.302Z",
+      "event": "Trend detected: Problemas de tránsito en Guaymallén"
+    },
+    {
+      "time": "2026-03-15T05:06:00.303Z",
+      "event": "Story rejected: Problemas de tránsito en Guaymallén"
+    },
+    {
+      "time": "2026-03-15T05:06:00.303Z",
+      "event": "Trend detected: Evento cultural en Maipú"
+    },
+    {
+      "time": "2026-03-15T05:06:00.304Z",
+      "event": "Story rejected: Evento cultural en Maipú"
+    },
+    {
+      "time": "2026-03-15T05:06:00.304Z",
+      "event": "Trend detected: Robos en el centro de Mendoza"
+    },
+    {
+      "time": "2026-03-15T05:06:00.306Z",
+      "event": "Article published: Robos en el centro de Mendoza"
+    }
+  ]
+}
