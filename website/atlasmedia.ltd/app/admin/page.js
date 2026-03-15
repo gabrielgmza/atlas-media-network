@@ -1,9 +1,28 @@
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { atlasPublications, getJournalistsByPublication, getJournalistById } from "../../lib/atlas-config";
-import { createArticle } from "../../lib/articles";
+"use client";
 
-export const dynamic = "force-dynamic";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+
+const atlasPublications = [
+  {
+    id: "argentina-post",
+    name: "Argentina Post",
+    categories: ["Politics", "Economy", "International", "Technology", "Society", "Sports", "Opinion", "Business"]
+  },
+  {
+    id: "argentina-post-mendoza",
+    name: "Argentina Post Mendoza",
+    categories: ["Provincial Politics", "Regional Economy", "Crime", "Society", "Local Business", "Culture", "Sports", "Tourism"]
+  }
+];
+
+const newsroomRoster = [
+  { id: "sofia-morales", name: "Sofia Morales", role: "Political Correspondent", publication: "argentina-post" },
+  { id: "lucas-ferrer", name: "Lucas Ferrer", role: "Business Reporter", publication: "argentina-post" },
+  { id: "camila-rojas", name: "Camila Rojas", role: "Culture Journalist", publication: "argentina-post-mendoza" },
+  { id: "marcos-rivas", name: "Marcos Rivas", role: "Crime Reporter", publication: "argentina-post-mendoza" },
+  { id: "valentina-quiroga", name: "Valentina Quiroga", role: "Local News Reporter", publication: "argentina-post-mendoza" }
+];
 
 function slugify(value) {
   return String(value || "")
@@ -14,282 +33,223 @@ function slugify(value) {
     .replace(/^-+|-+$/g, "");
 }
 
-function makeId(publication) {
-  const prefix = publication === "argentina-post-mendoza" ? "apm" : "ap";
-  return `${prefix}-${Date.now()}`;
-}
+function AdminForm() {
+  const searchParams = useSearchParams();
 
-function getPublicationName(publicationId) {
-  return atlasPublications.find((p) => p.id === publicationId)?.name || publicationId;
-}
+  const paramPublication = searchParams.get("publication") || "";
+  const paramTitle = searchParams.get("title") || "";
+  const paramAuthor = searchParams.get("author") || "";
+  const paramCategory = searchParams.get("category") || "";
 
-async function publishArticle(formData) {
-  "use server";
+  const [publication, setPublication] = useState(paramPublication || "argentina-post");
+  const [authorId, setAuthorId] = useState(paramAuthor || "");
+  const [title, setTitle] = useState(paramTitle || "");
+  const [slug, setSlug] = useState(slugify(paramTitle));
+  const [excerpt, setExcerpt] = useState("");
+  const [category, setCategory] = useState(paramCategory || "");
+  const [section, setSection] = useState(paramCategory || "");
+  const [status, setStatus] = useState("published");
+  const [seoTitle, setSeoTitle] = useState(paramTitle || "");
+  const [seoDescription, setSeoDescription] = useState("");
+  const [content, setContent] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+  const fromBrief = !!paramTitle;
 
-  const publication = String(formData.get("publication") || "").trim();
-  const authorId = String(formData.get("authorId") || "").trim();
-  const title = String(formData.get("title") || "").trim();
-  const slug = String(formData.get("slug") || "").trim();
-  const excerpt = String(formData.get("excerpt") || "").trim();
-  const category = String(formData.get("category") || "").trim();
-  const section = String(formData.get("section") || "").trim();
-  const status = String(formData.get("status") || "published").trim();
-  const seoTitle = String(formData.get("seoTitle") || "").trim();
-  const seoDescription = String(formData.get("seoDescription") || "").trim();
+  const availableJournalists = newsroomRoster.filter(j => j.publication === publication);
+  const currentPublication = atlasPublications.find(p => p.id === publication);
 
-  const content = String(formData.get("content") || "")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
+  useEffect(() => {
+    const valid = availableJournalists.find(j => j.id === authorId);
+    if (!valid && !paramAuthor) setAuthorId("");
+  }, [publication]);
 
-  if (!publication || !authorId || !title || !excerpt || !category || !section || content.length === 0) {
-    redirect(`/admin?publication=${publication}&error=missing-fields`);
-  }
+  useEffect(() => {
+    if (title) setSlug(slugify(title));
+  }, [title]);
 
-  const journalist = getJournalistById(authorId);
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setSubmitting(true);
+    setErrorMsg("");
+    setSuccessMsg("");
 
-  if (!journalist) {
-    redirect(`/admin?publication=${publication}&error=invalid-author`);
-  }
+    const paragraphs = content.split("\n").map(l => l.trim()).filter(Boolean);
 
-  try {
-    await createArticle({
-      id: makeId(publication),
-      slug: slug ? slugify(slug) : slugify(title),
-      publication,
-      publicationName: getPublicationName(publication),
-      title,
-      excerpt,
-      category,
-      section,
-      author: journalist.signature,
-      authorId: journalist.id,
-      authorRole: journalist.role,
-      tone: journalist.tone,
-      status,
-      seoTitle: seoTitle || title,
-      seoDescription: seoDescription || excerpt,
-      publishedAt: new Date().toISOString(),
-      content
-    });
-  } catch (error) {
-    const message = String(error?.message || "");
-
-    if (
-      message.includes("duplicate key") ||
-      message.includes("articles_slug_key") ||
-      message.includes("unique")
-    ) {
-      redirect(`/admin?publication=${publication}&error=duplicate-slug`);
+    if (!publication || !authorId || !title || !excerpt || !category || !section || paragraphs.length === 0) {
+      setErrorMsg("Completá todos los campos requeridos.");
+      setSubmitting(false);
+      return;
     }
 
-    redirect(`/admin?publication=${publication}&error=publish-failed`);
+    try {
+      const token = localStorage.getItem("atlas-admin-token") || "";
+      const res = await fetch("/api/articles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-atlas-admin-token": token },
+        body: JSON.stringify({
+          publication, authorId, title, slug, excerpt,
+          category, section, status,
+          seoTitle: seoTitle || title,
+          seoDescription: seoDescription || excerpt,
+          content: paragraphs
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.ok) {
+        setSuccessMsg("✓ Artículo publicado correctamente.");
+        setTitle(""); setSlug(""); setExcerpt(""); setCategory("");
+        setSection(""); setSeoTitle(""); setSeoDescription(""); setContent("");
+      } else {
+        setErrorMsg(data.error || "Error al publicar.");
+      }
+    } catch (err) {
+      setErrorMsg(err.message);
+    }
+
+    setSubmitting(false);
   }
-
-  revalidatePath("/");
-  revalidatePath("/argentina-post");
-  revalidatePath("/argentina-post-mendoza");
-  revalidatePath("/api/articles");
-
-  redirect(`/admin?publication=${publication}&success=1`);
-}
-
-export default function AdminPage({ searchParams }) {
-  const selectedPublication =
-    typeof searchParams?.publication === "string" ? searchParams.publication : "";
-
-  const success = searchParams?.success === "1";
-  const error =
-    typeof searchParams?.error === "string" ? searchParams.error : "";
-
-  const availableJournalists = selectedPublication
-    ? getJournalistsByPublication(selectedPublication)
-    : [];
 
   return (
     <main style={{ maxWidth: 860, margin: "0 auto", padding: "48px 24px 80px", color: "#e5e7eb" }}>
       <a href="/" style={{ color: "#93c5fd", textDecoration: "none" }}>← Atlas Media Network</a>
 
-      <h1 style={{ fontSize: 48, marginBottom: 12 }}>Atlas Admin</h1>
-      <p style={{ opacity: 0.8, marginBottom: 24 }}>
-        Publish a new article into the editorial pilot using the structured editorial model.
+      <div style={{ display: "flex", alignItems: "center", gap: 14, margin: "18px 0 8px", flexWrap: "wrap" }}>
+        <h1 style={{ fontSize: 42, margin: 0 }}>Atlas Admin</h1>
+        {fromBrief && (
+          <span style={{
+            background: "#7c3aed22", color: "#a78bfa",
+            border: "1px solid #7c3aed55", borderRadius: 8,
+            padding: "4px 12px", fontSize: 13, fontWeight: 600
+          }}>
+            📋 Desde brief editorial
+          </span>
+        )}
+      </div>
+      <p style={{ opacity: 0.6, marginBottom: 24, fontSize: 14 }}>
+        Publicá un artículo nuevo en el piloto editorial.
       </p>
 
-      {success ? <div style={successStyle}>Article published successfully.</div> : null}
-
-      {error ? (
-        <div style={errorStyle}>
-          {error === "missing-fields" && "Please complete all required fields."}
-          {error === "invalid-author" && "Selected journalist is invalid."}
-          {error === "duplicate-slug" && "A note with that slug already exists. Change the title or slug and try again."}
-          {error === "publish-failed" && "An error occurred while publishing."}
-          {!["missing-fields", "invalid-author", "duplicate-slug", "publish-failed"].includes(error) &&
-            "An error occurred while publishing."}
+      {successMsg && (
+        <div style={{ marginBottom: 20, padding: "14px 16px", borderRadius: 12, border: "1px solid rgba(34,197,94,0.35)", background: "rgba(34,197,94,0.12)", color: "#dcfce7" }}>
+          {successMsg}
         </div>
-      ) : null}
+      )}
+      {errorMsg && (
+        <div style={{ marginBottom: 20, padding: "14px 16px", borderRadius: 12, border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.12)", color: "#fecaca" }}>
+          ⚠️ {errorMsg}
+        </div>
+      )}
 
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 28 }}>
-        {atlasPublications.map((publication) => (
-          <a
-            key={publication.id}
-            href={`/admin?publication=${publication.id}`}
-            style={{
-              display: "inline-block",
-              padding: "12px 16px",
-              borderRadius: 12,
-              textDecoration: "none",
-              color: "#fff",
-              background:
-                selectedPublication === publication.id
-                  ? "rgba(147,197,253,0.18)"
-                  : "rgba(255,255,255,0.08)",
-              border: "1px solid rgba(255,255,255,0.14)"
-            }}
-          >
-            {publication.name}
-          </a>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 28 }}>
+        {atlasPublications.map((pub) => (
+          <button key={pub.id} onClick={() => setPublication(pub.id)} style={{
+            padding: "10px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.14)",
+            background: publication === pub.id ? "rgba(147,197,253,0.18)" : "rgba(255,255,255,0.06)",
+            color: "#fff", cursor: "pointer", fontWeight: publication === pub.id ? 600 : 400
+          }}>{pub.name}</button>
         ))}
       </div>
 
-      <form action={publishArticle} style={{ display: "grid", gap: 16 }}>
-        <input type="hidden" name="publication" value={selectedPublication} />
+      <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16 }}>
 
         <div>
-          <label style={labelStyle}>Publication</label>
-          <input
-            value={
-              atlasPublications.find((p) => p.id === selectedPublication)?.name || "Select a publication above"
-            }
-            readOnly
-            style={{ ...fieldStyle, opacity: 0.8 }}
-          />
-        </div>
-
-        <div>
-          <label style={labelStyle}>Journalist</label>
-          <select name="authorId" required style={fieldStyle} disabled={!selectedPublication} defaultValue="">
-            <option value="">
-              {selectedPublication ? "Select journalist" : "Choose a publication first"}
-            </option>
-            {availableJournalists.map((journalist) => (
-              <option key={journalist.id} value={journalist.id}>
-                {journalist.name} — {journalist.role}
-              </option>
+          <label style={labelStyle}>Periodista <span style={{ color: "#ef4444" }}>*</span></label>
+          <select value={authorId} onChange={e => setAuthorId(e.target.value)} required style={fieldStyle}>
+            <option value="">Seleccionar periodista</option>
+            {availableJournalists.map(j => (
+              <option key={j.id} value={j.id}>{j.name} — {j.role}</option>
             ))}
           </select>
         </div>
 
         <div>
-          <label style={labelStyle}>Title</label>
-          <input name="title" placeholder="Title" required style={fieldStyle} disabled={!selectedPublication} />
+          <label style={labelStyle}>Título <span style={{ color: "#ef4444" }}>*</span></label>
+          <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Título del artículo" required style={fieldStyle} />
         </div>
 
         <div>
-          <label style={labelStyle}>Slug</label>
-          <input name="slug" placeholder="Slug (optional)" style={fieldStyle} disabled={!selectedPublication} />
+          <label style={labelStyle}>Slug <span style={{ opacity: 0.5, fontSize: 12 }}>(auto-generado desde el título)</span></label>
+          <input value={slug} onChange={e => setSlug(e.target.value)} placeholder="slug-del-articulo" style={fieldStyle} />
         </div>
 
         <div>
-          <label style={labelStyle}>Excerpt</label>
-          <input name="excerpt" placeholder="Excerpt" required style={fieldStyle} disabled={!selectedPublication} />
+          <label style={labelStyle}>Excerpt <span style={{ color: "#ef4444" }}>*</span></label>
+          <input value={excerpt} onChange={e => setExcerpt(e.target.value)} placeholder="Resumen breve del artículo" required style={fieldStyle} />
         </div>
 
-        <div>
-          <label style={labelStyle}>Category</label>
-          <input name="category" placeholder="Category" required style={fieldStyle} disabled={!selectedPublication} />
-        </div>
-
-        <div>
-          <label style={labelStyle}>Section</label>
-          <input name="section" placeholder="Section" required style={fieldStyle} disabled={!selectedPublication} />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <div>
+            <label style={labelStyle}>Categoría <span style={{ color: "#ef4444" }}>*</span></label>
+            <select value={category} onChange={e => { setCategory(e.target.value); setSection(e.target.value); }} required style={fieldStyle}>
+              <option value="">Seleccionar categoría</option>
+              {(currentPublication?.categories || []).map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Sección <span style={{ color: "#ef4444" }}>*</span></label>
+            <input value={section} onChange={e => setSection(e.target.value)} placeholder="Sección" required style={fieldStyle} />
+          </div>
         </div>
 
         <div>
           <label style={labelStyle}>Status</label>
-          <select name="status" defaultValue="published" style={fieldStyle} disabled={!selectedPublication}>
+          <select value={status} onChange={e => setStatus(e.target.value)} style={fieldStyle}>
             <option value="draft">Draft</option>
             <option value="published">Published</option>
           </select>
         </div>
 
         <div>
-          <label style={labelStyle}>SEO title</label>
-          <input name="seoTitle" placeholder="SEO title (optional)" style={fieldStyle} disabled={!selectedPublication} />
+          <label style={labelStyle}>SEO Title <span style={{ opacity: 0.5, fontSize: 12 }}>(opcional)</span></label>
+          <input value={seoTitle} onChange={e => setSeoTitle(e.target.value)} placeholder="SEO title" style={fieldStyle} />
         </div>
 
         <div>
-          <label style={labelStyle}>SEO description</label>
-          <input
-            name="seoDescription"
-            placeholder="SEO description (optional)"
-            style={fieldStyle}
-            disabled={!selectedPublication}
-          />
+          <label style={labelStyle}>SEO Description <span style={{ opacity: 0.5, fontSize: 12 }}>(opcional)</span></label>
+          <input value={seoDescription} onChange={e => setSeoDescription(e.target.value)} placeholder="SEO description" style={fieldStyle} />
         </div>
 
         <div>
-          <label style={labelStyle}>Content</label>
-          <textarea
-            name="content"
-            placeholder="One paragraph per line"
-            required
-            rows={10}
-            style={{ ...fieldStyle, resize: "vertical" }}
-            disabled={!selectedPublication}
-          />
+          <label style={labelStyle}>Contenido <span style={{ color: "#ef4444" }}>*</span> <span style={{ opacity: 0.5, fontSize: 12 }}>(un párrafo por línea)</span></label>
+          <textarea value={content} onChange={e => setContent(e.target.value)}
+            placeholder="Escribí el artículo aquí. Cada línea se convierte en un párrafo."
+            required rows={12}
+            style={{ ...fieldStyle, resize: "vertical" }} />
         </div>
 
-        <button
-          type="submit"
-          disabled={!selectedPublication}
-          style={{
-            padding: "14px 18px",
-            borderRadius: 12,
-            border: "1px solid rgba(255,255,255,0.14)",
-            background: "rgba(255,255,255,0.08)",
-            color: "#fff",
-            opacity: selectedPublication ? 1 : 0.55,
-            cursor: selectedPublication ? "pointer" : "not-allowed"
-          }}
-        >
-          Publish article
+        <button type="submit" disabled={submitting} style={{
+          padding: "14px 18px", borderRadius: 12,
+          border: "1px solid rgba(255,255,255,0.14)",
+          background: submitting ? "rgba(255,255,255,0.04)" : "rgba(59,130,246,0.8)",
+          color: "#fff", cursor: submitting ? "not-allowed" : "pointer",
+          fontWeight: 600, fontSize: 15, opacity: submitting ? 0.6 : 1
+        }}>
+          {submitting ? "Publicando..." : "Publicar artículo"}
         </button>
       </form>
     </main>
   );
 }
 
-const labelStyle = {
-  display: "block",
-  marginBottom: 8,
-  fontSize: 14,
-  opacity: 0.8
-};
+export default function AdminPage() {
+  return (
+    <Suspense fallback={<div style={{ color: "#e5e7eb", padding: 48 }}>Cargando...</div>}>
+      <AdminForm />
+    </Suspense>
+  );
+}
+
+const labelStyle = { display: "block", marginBottom: 8, fontSize: 14, opacity: 0.8 };
 
 const fieldStyle = {
-  width: "100%",
-  padding: "14px 16px",
-  borderRadius: 12,
+  width: "100%", padding: "12px 16px", borderRadius: 12,
   border: "1px solid rgba(255,255,255,0.14)",
-  background: "rgba(255,255,255,0.04)",
-  color: "#fff",
-  font: "inherit"
-};
-
-const successStyle = {
-  marginBottom: 20,
-  padding: "14px 16px",
-  borderRadius: 12,
-  border: "1px solid rgba(34,197,94,0.35)",
-  background: "rgba(34,197,94,0.12)",
-  color: "#dcfce7"
-};
-
-const errorStyle = {
-  marginBottom: 20,
-  padding: "14px 16px",
-  borderRadius: 12,
-  border: "1px solid rgba(239,68,68,0.35)",
-  background: "rgba(239,68,68,0.12)",
-  color: "#fecaca"
+  background: "rgba(255,255,255,0.04)", color: "#fff", font: "inherit",
+  boxSizing: "border-box"
 };
