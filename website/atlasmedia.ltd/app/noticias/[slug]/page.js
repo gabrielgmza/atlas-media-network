@@ -1,10 +1,7 @@
-import { getArticleBySlug, getAllArticles } from "../../../lib/articles";
+import { getArticleBySlug } from "../../../lib/articles";
 import { notFound } from "next/navigation";
 
-export async function generateStaticParams() {
-  const articles = await getAllArticles();
-  return articles.map((article) => ({ slug: article.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }) {
   const article = await getArticleBySlug(params.slug);
