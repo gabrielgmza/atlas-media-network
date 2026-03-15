@@ -1,8 +1,9 @@
 import {
   atlasPresidentState,
-  presidentMemory,
   presidentDepartments,
-  presidentTasks
+  presidentTasks,
+  getPresidentMemory,
+  getPresidentDecisions
 } from "../../lib/atlas-president";
 import { getAllArticles, getPublishedArticles, getDraftArticles } from "../../lib/articles";
 
@@ -17,6 +18,8 @@ export default async function PresidentPage() {
   const allArticles = await getAllArticles();
   const publishedArticles = await getPublishedArticles();
   const draftArticles = await getDraftArticles();
+  const memory = await getPresidentMemory();
+  const decisions = await getPresidentDecisions();
 
   return (
     <main style={{ maxWidth: 1160, margin: "0 auto", padding: "48px 24px 80px" }}>
@@ -82,14 +85,30 @@ export default async function PresidentPage() {
       <section style={sectionStyle}>
         <h2>President Memory</h2>
         <div style={{ display: "grid", gap: 16 }}>
-          {presidentMemory.map((memory) => (
-            <article key={memory.id} style={panelStyle}>
+          {memory.map((item) => (
+            <article key={item.id} style={panelStyle}>
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
-                <span style={tagStyle}>{memory.type}</span>
-                <span style={tagStyle}>{memory.priority}</span>
+                <span style={tagStyle}>{item.type}</span>
+                <span style={tagStyle}>{item.priority}</span>
               </div>
-              <h3 style={{ margin: "0 0 8px" }}>{memory.title}</h3>
-              <p style={{ opacity: 0.82, margin: 0 }}>{memory.detail}</p>
+              <h3 style={{ margin: "0 0 8px" }}>{item.title}</h3>
+              <p style={{ opacity: 0.82, margin: 0 }}>{item.detail}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section style={sectionStyle}>
+        <h2>Decision Register</h2>
+        <div style={{ display: "grid", gap: 16 }}>
+          {decisions.map((item) => (
+            <article key={item.id} style={panelStyle}>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+                <span style={tagStyle}>{item.status}</span>
+              </div>
+              <h3 style={{ margin: "0 0 8px" }}>{item.title}</h3>
+              <p style={{ margin: "0 0 8px" }}><strong>Decision:</strong> {item.decision}</p>
+              <p style={{ opacity: 0.82, margin: 0 }}><strong>Rationale:</strong> {item.rationale}</p>
             </article>
           ))}
         </div>

@@ -1,3 +1,5 @@
+import { getDb } from "./db";
+
 export const atlasPresidentState = {
   system: {
     name: "AI President OS",
@@ -21,41 +23,6 @@ export const atlasPresidentState = {
     cloudDatabase: "Connected"
   }
 };
-
-export const presidentMemory = [
-  {
-    id: "mem-001",
-    type: "decision",
-    title: "Invisible holding model confirmed",
-    detail:
-      "Atlas Media Network operates as an invisible holding while publications appear independent to the public.",
-    priority: "high"
-  },
-  {
-    id: "mem-002",
-    type: "decision",
-    title: "Pilot geography confirmed",
-    detail:
-      "The initial pilot is Argentina, starting with the national publication and the Mendoza provincial edition.",
-    priority: "high"
-  },
-  {
-    id: "mem-003",
-    type: "infrastructure",
-    title: "Vercel and Google Cloud SQL operational",
-    detail:
-      "The public platform runs on Vercel and article persistence is connected to Google Cloud SQL.",
-    priority: "high"
-  },
-  {
-    id: "mem-004",
-    type: "governance",
-    title: "Founder final authority",
-    detail:
-      "The AI President does not override the founder. It supports, analyzes, and executes under founder direction.",
-    priority: "critical"
-  }
-];
 
 export const presidentDepartments = [
   {
@@ -98,3 +65,77 @@ export const presidentTasks = [
     status: "queued"
   }
 ];
+
+export async function getPresidentMemory() {
+  try {
+    const db = getDb();
+    const result = await db.query(`
+      select id, type, title, detail, priority, created_at
+      from public.president_memory
+      order by created_at desc
+    `);
+    return result.rows;
+  } catch (error) {
+    console.error("PRESIDENT_MEMORY_READ_ERROR", error.message);
+    return [];
+  }
+}
+
+export async function getPresidentDecisions() {
+  try {
+    const db = getDb();
+    const result = await db.query(`
+      select id, title, decision, rationale, status, created_at
+      from public.president_decisions
+      order by created_at desc
+    `);
+    return result.rows;
+  } catch (error) {
+    console.error("PRESIDENT_DECISIONS_READ_ERROR", error.message);
+    return [];
+  }
+}
+
+export async function createPresidentMemory(input) {
+  const db = getDb();
+  const result = await db.query(
+    `
+      insert into public.president_memory (
+        id, type, title, detail, priority, created_at
+      )
+      values ($1,$2,$3,$4,$5,$6)
+      returning id, type, title, detail, priority, created_at
+    `,
+    [
+      input.id,
+      input.type,
+      input.title,
+      input.detail,
+      input.priority,
+      input.createdAt
+    ]
+  );
+  return result.rows[0];
+}
+
+export async function createPresidentDecision(input) {
+  const db = getDb();
+  const result = await db.query(
+    `
+      insert into public.president_decisions (
+        id, title, decision, rationale, status, created_at
+      )
+      values ($1,$2,$3,$4,$5,$6)
+      returning id, title, decision, rationale, status, created_at
+    `,
+    [
+      input.id,
+      input.title,
+      input.decision,
+      input.rationale,
+      input.status,
+      input.createdAt
+    ]
+  );
+  return result.rows[0];
+}
