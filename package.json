@@ -1,9 +1,9 @@
 {
-  "name": "atlas-media-network",
-  "version": "1.0.0",
-  "description": "Atlas Media Network AI Systems",
-  "main": "index.js",
-  "scripts": {
-    "newsroom": "node ai/newsroom/newsroom-runner.js"
-  }
+"name":"atlas-media-network",
+"version":"1.0.0",
+"description":"Atlas Media Network AI Systems",
+"scripts":{
+"newsroom":"node ai/newsroom/newsroom-runner.js",
+"simulate":"node ai/simulation/day-simulation.js"
+}
 }

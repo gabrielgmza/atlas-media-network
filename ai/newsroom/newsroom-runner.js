@@ -7,22 +7,40 @@ const editor = new EditorAI()
 const journalist = new JournalistEngine()
 const publisher = new Publisher()
 
+const detectedTrends = [
+
+"Accidente en Ruta 7 Mendoza",
+"Aumento del dólar en Argentina",
+"Nuevo parque tecnológico en Mendoza",
+"Incendio en Godoy Cruz",
+"Festival cultural en Maipú"
+
+]
+
 function runNewsroom(){
 
-    const detectedTrend = "Accidente en Ruta 7 Mendoza"
+console.log("Atlas AI Newsroom started\n")
 
-    const decision = editor.decideTopic(detectedTrend)
+detectedTrends.forEach(trend => {
 
-    if(!decision.publish){
+const decision = editor.decideTopic(trend)
 
-        console.log("Editor rejected the story")
+console.log("Evaluating:", trend)
+console.log("Impact score:", decision.score)
 
-        return
-    }
+if(!decision.publish){
 
-    const article = journalist.writeArticle(detectedTrend)
+console.log("Editor rejected story\n")
+return
+}
 
-    publisher.publish(article)
+const article = journalist.writeArticle(trend)
+
+publisher.publish(article)
+
+console.log("\n")
+
+})
 
 }
 
