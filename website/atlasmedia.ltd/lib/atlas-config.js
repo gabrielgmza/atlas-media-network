@@ -198,6 +198,14 @@ export const newsroomRoster = [
   }
 ];
 
+export function getJournalistById(id) {
+  return newsroomRoster.find((journalist) => journalist.id === id) || null;
+}
+
+export function getJournalistsByPublication(publication) {
+  return newsroomRoster.filter((journalist) => journalist.publication === publication);
+}
+
 export const aiDepartments = [
   "AI Editorial Network",
   "AI Newsroom",

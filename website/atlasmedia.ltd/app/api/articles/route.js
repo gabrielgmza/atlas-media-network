@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createArticle, getAllArticles } from "../../../lib/articles";
+import { getJournalistById } from "../../../lib/atlas-config";
 
 function slugify(value) {
   return String(value || "")
@@ -37,6 +38,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
+    const journalist = body.authorId ? getJournalistById(body.authorId) : null;
 
     const article = await createArticle({
       id: makeId(body.publication),
@@ -45,7 +47,7 @@ export async function POST(request) {
       title: body.title,
       excerpt: body.excerpt,
       category: body.category,
-      author: body.author,
+      author: journalist ? journalist.signature : body.author,
       publishedAt: body.publishedAt || new Date().toISOString(),
       content: Array.isArray(body.content) ? body.content : []
     });
