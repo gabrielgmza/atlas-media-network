@@ -6,6 +6,8 @@ import {
   getPresidentDecisions
 } from "../../lib/atlas-president";
 import { getAllArticles, getPublishedArticles, getDraftArticles } from "../../lib/articles";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -14,12 +16,89 @@ export const metadata = {
   description: "Executive operating layer of Atlas Media Network."
 };
 
-export default async function PresidentPage() {
+async function createMemoryAction(formData) {
+  "use server";
+
+  const type = String(formData.get("type") || "note").trim();
+  const title = String(formData.get("title") || "").trim();
+  const detail = String(formData.get("detail") || "").trim();
+  const priority = String(formData.get("priority") || "medium").trim();
+
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+
+  const response = await fetch(`${baseUrl}/api/president/console`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-atlas-admin-token": process.env.ATLAS_ADMIN_TOKEN || ""
+    },
+    body: JSON.stringify({
+      kind: "memory",
+      type,
+      title,
+      detail,
+      priority
+    }),
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    redirect("/president?error=memory");
+  }
+
+  revalidatePath("/president");
+  revalidatePath("/api/president/status");
+  redirect("/president?success=memory");
+}
+
+async function createDecisionAction(formData) {
+  "use server";
+
+  const title = String(formData.get("title") || "").trim();
+  const decision = String(formData.get("decision") || "").trim();
+  const rationale = String(formData.get("rationale") || "").trim();
+  const status = String(formData.get("status") || "approved").trim();
+
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+
+  const response = await fetch(`${baseUrl}/api/president/console`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-atlas-admin-token": process.env.ATLAS_ADMIN_TOKEN || ""
+    },
+    body: JSON.stringify({
+      kind: "decision",
+      title,
+      decision,
+      rationale,
+      status
+    }),
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    redirect("/president?error=decision");
+  }
+
+  revalidatePath("/president");
+  revalidatePath("/api/president/status");
+  redirect("/president?success=decision");
+}
+
+export default async function PresidentPage({ searchParams }) {
   const allArticles = await getAllArticles();
   const publishedArticles = await getPublishedArticles();
   const draftArticles = await getDraftArticles();
   const memory = await getPresidentMemory();
   const decisions = await getPresidentDecisions();
+
+  const success = typeof searchParams?.success === "string" ? searchParams.success : "";
+  const error = typeof searchParams?.error === "string" ? searchParams.error : "";
 
   return (
     <main style={{ maxWidth: 1160, margin: "0 auto", padding: "48px 24px 80px" }}>
@@ -29,6 +108,20 @@ export default async function PresidentPage() {
       <p style={{ fontSize: 18, opacity: 0.82, maxWidth: 860 }}>
         Executive command layer for Atlas Media Network, operating under founder-led governance.
       </p>
+
+      {success ? (
+        <div style={successStyle}>
+          {success === "memory" && "President memory registered successfully."}
+          {success === "decision" && "President decision registered successfully."}
+        </div>
+      ) : null}
+
+      {error ? (
+        <div style={errorStyle}>
+          {error === "memory" && "Failed to register president memory."}
+          {error === "decision" && "Failed to register president decision."}
+        </div>
+      ) : null}
 
       <section style={sectionStyle}>
         <div style={gridStyle}>
@@ -79,6 +172,47 @@ export default async function PresidentPage() {
               <p style={{ opacity: 0.82, margin: 0 }}>{department.focus}</p>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section style={sectionStyle}>
+        <h2>President Console</h2>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
+          <form action={createMemoryAction} style={panelStyle}>
+            <h3 style={{ marginTop: 0 }}>Register Memory</h3>
+            <div style={{ display: "grid", gap: 12 }}>
+              <select name="type" style={fieldStyle} defaultValue="decision">
+                <option value="decision">decision</option>
+                <option value="governance">governance</option>
+                <option value="infrastructure">infrastructure</option>
+                <option value="note">note</option>
+              </select>
+              <input name="title" placeholder="Memory title" required style={fieldStyle} />
+              <textarea name="detail" placeholder="Memory detail" rows={5} required style={{ ...fieldStyle, resize: "vertical" }} />
+              <select name="priority" style={fieldStyle} defaultValue="medium">
+                <option value="critical">critical</option>
+                <option value="high">high</option>
+                <option value="medium">medium</option>
+                <option value="low">low</option>
+              </select>
+              <button type="submit" style={buttonStyle}>Save memory</button>
+            </div>
+          </form>
+
+          <form action={createDecisionAction} style={panelStyle}>
+            <h3 style={{ marginTop: 0 }}>Register Decision</h3>
+            <div style={{ display: "grid", gap: 12 }}>
+              <input name="title" placeholder="Decision title" required style={fieldStyle} />
+              <textarea name="decision" placeholder="Decision" rows={4} required style={{ ...fieldStyle, resize: "vertical" }} />
+              <textarea name="rationale" placeholder="Rationale" rows={4} style={{ ...fieldStyle, resize: "vertical" }} />
+              <select name="status" style={fieldStyle} defaultValue="approved">
+                <option value="approved">approved</option>
+                <option value="pending">pending</option>
+                <option value="rejected">rejected</option>
+              </select>
+              <button type="submit" style={buttonStyle}>Save decision</button>
+            </div>
+          </form>
         </div>
       </section>
 
@@ -164,4 +298,37 @@ const tagStyle = {
   fontSize: 12,
   border: "1px solid rgba(255,255,255,0.12)",
   background: "rgba(255,255,255,0.04)"
+};
+const fieldStyle = {
+  width: "100%",
+  padding: "14px 16px",
+  borderRadius: 12,
+  border: "1px solid rgba(255,255,255,0.14)",
+  background: "rgba(255,255,255,0.04)",
+  color: "#fff",
+  font: "inherit"
+};
+const buttonStyle = {
+  padding: "14px 18px",
+  borderRadius: 12,
+  border: "1px solid rgba(255,255,255,0.14)",
+  background: "rgba(255,255,255,0.08)",
+  color: "#fff",
+  cursor: "pointer"
+};
+const successStyle = {
+  marginTop: 24,
+  padding: "14px 16px",
+  borderRadius: 12,
+  border: "1px solid rgba(34,197,94,0.35)",
+  background: "rgba(34,197,94,0.12)",
+  color: "#dcfce7"
+};
+const errorStyle = {
+  marginTop: 24,
+  padding: "14px 16px",
+  borderRadius: 12,
+  border: "1px solid rgba(239,68,68,0.35)",
+  background: "rgba(239,68,68,0.12)",
+  color: "#fecaca"
 };
