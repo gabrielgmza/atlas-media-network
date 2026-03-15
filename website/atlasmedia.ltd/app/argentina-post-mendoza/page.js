@@ -1,5 +1,7 @@
 import { getArticlesByPublication } from "../../lib/articles";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Argentina Post Mendoza",
   description: "Provincial publication pilot by Atlas Media Network."

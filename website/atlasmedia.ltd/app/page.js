@@ -1,5 +1,7 @@
 import { getAllArticles } from "../lib/articles";
 
+export const dynamic = "force-dynamic";
+
 function Card({ article }) {
   return (
     <article
