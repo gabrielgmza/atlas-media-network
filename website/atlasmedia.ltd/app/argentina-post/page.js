@@ -56,6 +56,7 @@ export default async function ArgentinaPostPage() {
       <nav style={{ borderBottom: "1px solid #ddd", background: "#fff" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", display: "flex", gap: 0, overflowX: "auto" }}>
           <a href="/argentina-post" style={{ padding: "10px 16px", fontSize: 13, fontWeight: 700, color: "#111", textDecoration: "none", borderBottom: "2px solid #111", fontFamily: "Arial, sans-serif", whiteSpace: "nowrap" }}>Inicio</a>
+          <a href="/periodistas" style={{ padding: "10px 16px", fontSize: 13, color: "#444", textDecoration: "none", fontFamily: "Arial, sans-serif", whiteSpace: "nowrap" }}>Redaccion</a>
           <a href="/buscar?publication=argentina-post" style={{ padding: "10px 16px", fontSize: 13, color: "#444", textDecoration: "none", fontFamily: "Arial, sans-serif", whiteSpace: "nowrap", marginLeft: "auto" }}>Buscar</a>
           {categories.map(cat => (
             <a key={cat.slug} href={`/argentina-post?cat=${cat.slug}`} style={{ padding: "10px 16px", fontSize: 13, color: "#444", textDecoration: "none", fontFamily: "Arial, sans-serif", whiteSpace: "nowrap" }}>{cat.name}</a>
