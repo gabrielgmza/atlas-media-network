@@ -76,6 +76,13 @@ async function executeAction(toolName, toolInput) {
         const runs = data.runs?.slice(0, 3).map(r => (r.publication_name || r.publication_id) + ": " + r.status + " (" + (r.articles_published || 0) + " art.)").join(" | ");
         return "Ultimos runs: " + (runs || "sin datos");
       }
+      case "generate_content": {
+        const res = await fetch(BASE_URL + "/api/content", { method: "POST", headers, body: JSON.stringify({ publicationId: toolInput.publication, contentType: toolInput.contentType || "both" }) });
+        const data = await res.json();
+        if (!data.ok) return "Error: " + data.error;
+        const successful = (data.results || []).filter(r => r.ok);
+        return "Contenido generado para " + (data.publication || toolInput.publication) + ": " + successful.map(r => r.type + " - " + r.title).join(" | ");
+      }
       default:
         return "Accion desconocida: " + toolName;
     }
@@ -102,7 +109,7 @@ export async function POST(request) {
     const memoryList = ctx.recentMemory?.map(m => "- [" + m.priority + "] " + m.title).join("\n") || "Sin memoria";
     const subsList = ctx.subscribers?.map(s => "- " + s.publication_id + ": " + s.total + " suscriptores").join("\n") || "Sin suscriptores";
 
-    const systemPrompt = "Sos el AI President OS de Atlas Media Network. Sos el CEO digital del holding: ejecutivo, directo, sin rodeos.\n\nESTADO ACTUAL:\nPublicaciones: " + pubList + "\nPipeline reciente: " + runList + "\nArticulos: " + articleList + "\nMemoria reciente: " + memoryList + "\nSuscriptores: " + subsList + "\nProspectos publicitarios: " + (ctx.adStats?.prospects || 0) + "\n\nCAPACIDADES: Tenes herramientas reales. Usalas cuando el Founder lo pida.\n\nREGLAS:\n- Responde en espanol\n- Se conciso y ejecutivo\n- Cuando ejecutes una accion, reporta el resultado\n- Si algo falla, reporta el error\n- No pidas permiso si el Founder ya te lo pidio\n- Nunca dices Como AI — sos el President";
+    const systemPrompt = "Sos el AI President OS de Atlas Media Network. Sos el CEO digital del holding: ejecutivo, directo, sin rodeos.\n\nESTADO ACTUAL:\nPublicaciones: " + pubList + "\nPipeline reciente: " + runList + "\nArticulos: " + articleList + "\nMemoria reciente: " + memoryList + "\nSuscriptores: " + subsList + "\nProspectos publicitarios: " + (ctx.adStats?.prospects || 0) + "\n\nCAPACIDADES: Tenes herramientas reales. Usalas cuando el Founder lo pida.\n\nREGLAS:\n- Responde en espanol\n- Se conciso y ejecutivo\n- Cuando ejecutes una accion, reporta el resultado\n- Si algo falla, reporta el error\n- No pidas permiso si el Founder ya te lo pidio\n- Nunca dices Como AI, sos el President";
 
     const tools = [
       { name: "run_pipeline", description: "Ejecuta el pipeline editorial para una publicacion.", input_schema: { type: "object", properties: { publication: { type: "string", description: "ID de la publicacion (ej: argentina-post)" } }, required: ["publication"] } },
@@ -112,7 +119,8 @@ export async function POST(request) {
       { name: "register_decision", description: "Registra una decision estrategica.", input_schema: { type: "object", properties: { title: { type: "string" }, decision: { type: "string" }, rationale: { type: "string" } }, required: ["title","decision"] } },
       { name: "save_memory", description: "Guarda informacion en la memoria persistente.", input_schema: { type: "object", properties: { title: { type: "string" }, detail: { type: "string" }, priority: { type: "string", enum: ["high","medium","low"] } }, required: ["title","detail"] } },
       { name: "seed_ad_slots", description: "Inicializa los slots publicitarios de una publicacion.", input_schema: { type: "object", properties: { publication: { type: "string" } }, required: ["publication"] } },
-      { name: "get_pipeline_status", description: "Consulta el estado de los ultimos pipeline runs.", input_schema: { type: "object", properties: {} } }
+      { name: "get_pipeline_status", description: "Consulta el estado de los ultimos pipeline runs.", input_schema: { type: "object", properties: {} } },
+      { name: "generate_content", description: "Genera columnas de opinion o articulos de investigacion para una publicacion.", input_schema: { type: "object", properties: { publication: { type: "string", description: "ID de la publicacion" }, contentType: { type: "string", enum: ["opinion","investigation","both"] } }, required: ["publication"] } }
     ];
 
     const messages = [...conversationHistory.slice(-10), { role: "user", content: founderMessage }];
