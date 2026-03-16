@@ -20,14 +20,33 @@ function getPublicationName(publicationId) {
   return atlasPublications.find((p) => p.id === publicationId)?.name || publicationId;
 }
 
-export async function GET() {
-  const articles = await getAllArticles();
-
-  return NextResponse.json({
-    ok: true,
-    total: articles.length,
-    articles
-  });
+export async function GET(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const publicationId = searchParams.get("publication");
+    const category = searchParams.get("category");
+    const sort = searchParams.get("sort") || "recent";
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "18");
+    const offset = (page - 1) * limit;
+    const { getDb } = await import("../../../lib/db");
+    const db = getDb();
+    const conditions = ["status='published'"];
+    const params = [];
+    if (publicationId) { params.push(publicationId); conditions.push("publication=$" + params.length); }
+    if (category) { params.push(category); conditions.push("lower(category)=lower($" + params.length + ")"); }
+    const where = "WHERE " + conditions.join(" AND ");
+    const order = sort === "oldest" ? "ORDER BY published_at ASC" : "ORDER BY published_at DESC";
+    const [articlesResult, countResult] = await Promise.all([
+      db.query("SELECT id,slug,title,excerpt,category,author,author_role,publication,publication_name,published_at,image_url,image_thumb FROM public.articles " + where + " " + order + " LIMIT $" + (params.length+1) + " OFFSET $" + (params.length+2), [...params, limit, offset]),
+      db.query("SELECT COUNT(*) as total FROM public.articles " + where, params)
+    ]);
+    const total = parseInt(countResult.rows[0].total);
+    return NextResponse.json({ ok: true, articles: articlesResult.rows, total, page, pages: Math.ceil(total/limit) });
+  } catch {
+    const articles = await getAllArticles();
+    return NextResponse.json({ ok: true, total: articles.length, articles, pages: 1 });
+  }
 }
 
 export async function POST(request) {
