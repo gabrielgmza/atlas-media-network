@@ -4,6 +4,7 @@
     {"path": "/api/cron/expansion", "schedule": "0 3 * * 1"},
     {"path": "/api/cron/advertiser-discovery", "schedule": "0 4 * * 3"},
     {"path": "/api/cron/newsletter", "schedule": "0 9 * * 1"},
-    {"path": "/api/cron/content", "schedule": "0 10 * * 3"}
+    {"path": "/api/cron/content", "schedule": "0 10 * * 3"},
+    {"path": "/api/cron/executive-report", "schedule": "0 8 * * *"}
   ]
 }
