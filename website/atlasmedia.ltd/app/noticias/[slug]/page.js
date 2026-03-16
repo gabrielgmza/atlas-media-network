@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://atlas-media-network.vercel.app";
+
 export async function generateMetadata({ params }) {
   const article = await getArticleBySlug(params.slug);
   if (!article) return { title: "Artículo no encontrado" };
@@ -12,8 +14,18 @@ export async function generateMetadata({ params }) {
     openGraph: {
       title: article.seoTitle || article.title,
       description: article.seoDescription || article.excerpt,
+      type: "article",
+      publishedTime: article.publishedAt,
+      authors: [article.author],
       images: article.image_url ? [{ url: article.image_url }] : []
-    }
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.seoTitle || article.title,
+      description: article.seoDescription || article.excerpt,
+      images: article.image_url ? [article.image_url] : []
+    },
+    alternates: { canonical: BASE_URL + "/noticias/" + params.slug }
   };
 }
 
@@ -32,16 +44,37 @@ export default async function ArticlePage({ params }) {
   const related = allArticles.filter(a => a.slug !== article.slug && a.category === article.category).slice(0, 3);
   const more = allArticles.filter(a => a.slug !== article.slug).slice(0, 5);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    headline: article.title,
+    description: article.excerpt,
+    image: article.image_url ? [article.image_url] : [],
+    datePublished: article.publishedAt,
+    dateModified: article.updatedAt || article.publishedAt,
+    author: [{ "@type": "Person", name: article.author }],
+    publisher: {
+      "@type": "Organization",
+      name: article.publicationName,
+      logo: { "@type": "ImageObject", url: BASE_URL + "/logo.png" }
+    },
+    mainEntityOfPage: { "@type": "WebPage", "@id": BASE_URL + "/noticias/" + article.slug },
+    articleSection: article.category,
+    inLanguage: "es-AR"
+  };
+
   return (
     <div style={{ background: "#fff", color: "#111", minHeight: "100vh", fontFamily: "Georgia, serif" }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+
       <div style={{ background: "#111", color: "#fff", padding: "6px 24px", fontSize: 12, display: "flex", justifyContent: "space-between" }}>
         <span style={{ opacity: 0.6 }}>{new Date().toLocaleDateString("es-AR", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</span>
         <a href="/" style={{ color: "#93c5fd", textDecoration: "none", fontSize: 11 }}>Atlas Media Network</a>
       </div>
 
-      <header style={{ borderBottom: `3px solid ${accentColor}`, padding: "16px 24px" }}>
+      <header style={{ borderBottom: "3px solid " + accentColor, padding: "16px 24px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", textAlign: "center" }}>
-          <a href={`/${pubSlug}`} style={{ textDecoration: "none", color: "inherit" }}>
+          <a href={"/" + pubSlug} style={{ textDecoration: "none", color: "inherit" }}>
             <h1 style={{ fontSize: 42, fontWeight: 900, margin: 0, letterSpacing: -1, color: accentColor }}>{article.publicationName}</h1>
           </a>
         </div>
@@ -50,14 +83,14 @@ export default async function ArticlePage({ params }) {
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px 80px", display: "grid", gridTemplateColumns: "1fr 300px", gap: 48 }}>
         <article>
           <div style={{ fontSize: 12, fontFamily: "Arial, sans-serif", marginBottom: 16, display: "flex", gap: 8, alignItems: "center" }}>
-            <a href={`/${pubSlug}`} style={{ color: "#888", textDecoration: "none" }}>{article.publicationName}</a>
+            <a href={"/" + pubSlug} style={{ color: "#888", textDecoration: "none" }}>{article.publicationName}</a>
             <span style={{ color: "#bbb" }}>›</span>
             <span style={{ color: accentColor, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>{article.category}</span>
           </div>
 
           <h1 style={{ fontSize: 42, lineHeight: 1.1, margin: "0 0 16px", fontWeight: 900 }}>{article.title}</h1>
 
-          <p style={{ fontSize: 20, color: "#333", lineHeight: 1.5, margin: "0 0 20px", fontStyle: "italic", borderLeft: `4px solid ${accentColor}`, paddingLeft: 16 }}>
+          <p style={{ fontSize: 20, color: "#333", lineHeight: 1.5, margin: "0 0 20px", fontStyle: "italic", borderLeft: "4px solid " + accentColor, paddingLeft: 16 }}>
             {article.excerpt}
           </p>
 
@@ -97,12 +130,12 @@ export default async function ArticlePage({ params }) {
 
           {related.length > 0 && (
             <div style={{ marginTop: 40 }}>
-              <h3 style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, borderBottom: `2px solid ${accentColor}`, paddingBottom: 8, marginBottom: 20, fontFamily: "Arial, sans-serif" }}>
+              <h3 style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, borderBottom: "2px solid " + accentColor, paddingBottom: 8, marginBottom: 20, fontFamily: "Arial, sans-serif" }}>
                 Relacionadas en {article.category}
               </h3>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
                 {related.map(a => (
-                  <a key={a.id} href={`/noticias/${a.slug}`} style={{ textDecoration: "none", color: "inherit" }}>
+                  <a key={a.id} href={"/noticias/" + a.slug} style={{ textDecoration: "none", color: "inherit" }}>
                     {a.image_thumb && <img src={a.image_thumb} alt="" style={{ width: "100%", height: 110, objectFit: "cover", display: "block", marginBottom: 8 }} />}
                     <p style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.3, margin: 0 }}>{a.title}</p>
                   </a>
@@ -114,12 +147,12 @@ export default async function ArticlePage({ params }) {
 
         <aside>
           <div style={{ position: "sticky", top: 24 }}>
-            <h3 style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, borderBottom: `2px solid ${accentColor}`, paddingBottom: 8, marginBottom: 16, fontFamily: "Arial, sans-serif" }}>
+            <h3 style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: 2, borderBottom: "2px solid " + accentColor, paddingBottom: 8, marginBottom: 16, fontFamily: "Arial, sans-serif" }}>
               Más noticias
             </h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {more.map(a => (
-                <a key={a.id} href={`/noticias/${a.slug}`} style={{ textDecoration: "none", color: "inherit", paddingBottom: 16, borderBottom: "1px solid #eee" }}>
+                <a key={a.id} href={"/noticias/" + a.slug} style={{ textDecoration: "none", color: "inherit", paddingBottom: 16, borderBottom: "1px solid #eee" }}>
                   <span style={{ fontSize: 10, color: accentColor, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, fontFamily: "Arial, sans-serif" }}>{a.category}</span>
                   <p style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.3, margin: "4px 0" }}>{a.title}</p>
                   <span style={{ fontSize: 11, color: "#888", fontFamily: "Arial, sans-serif" }}>{a.author}</span>
