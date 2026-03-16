@@ -1,35 +1,18 @@
-import { getDb } from "../../lib/db";
+"use client";
 
-export const dynamic = "force-dynamic";
+import { useState, useEffect } from "react";
 
-export const metadata = {
-  title: "Red de Medios — Atlas Media Network",
-  description: "Mapa completo de todas las publicaciones del holding Atlas Media Network."
+const scopeColors = {
+  national:   { bg: "#1e1b4b", border: "#6366f1", text: "#a5b4fc", label: "Nacional" },
+  provincial: { bg: "#14532d", border: "#22c55e", text: "#86efac", label: "Provincial" },
+  city:       { bg: "#1e3a5f", border: "#3b82f6", text: "#93c5fd", label: "Ciudad" },
+  municipal:  { bg: "#4a1942", border: "#a855f7", text: "#d8b4fe", label: "Municipal" },
+  niche:      { bg: "#451a03", border: "#f97316", text: "#fdba74", label: "Nicho" }
 };
 
-async function getNetworkData() {
-  const db = getDb();
-  try {
-    const pubs = await db.query(`
-      SELECT p.*, t.name as territory_name, t.type as territory_type, pp.name as parent_name, pp.slug as parent_slug,
-        (SELECT COUNT(*) FROM public.journalists j WHERE j.publication_id=p.id AND j.status='active') as journalist_count,
-        (SELECT COUNT(*) FROM public.pub_categories c WHERE c.publication_id=p.id AND c.active=true) as category_count,
-        (SELECT COUNT(*) FROM public.articles a WHERE a.publication=p.id AND a.status='published') as article_count,
-        (SELECT COUNT(*) FROM public.newsletter_subscribers ns WHERE ns.publication_id=p.id AND ns.status='active') as subscriber_count,
-        (SELECT started_at FROM public.pipeline_runs pr WHERE pr.publication_id=p.id ORDER BY started_at DESC LIMIT 1) as last_run,
-        (SELECT articles_published FROM public.pipeline_runs pr WHERE pr.publication_id=p.id AND pr.status='completed' ORDER BY started_at DESC LIMIT 1) as last_run_articles
-      FROM public.publications p
-      LEFT JOIN public.territories t ON p.territory_id=t.id
-      LEFT JOIN public.publications pp ON p.parent_id=pp.id
-      ORDER BY p.created_at ASC
-    `);
-    const territories = await db.query(`SELECT t.*, COUNT(p.id) as pub_count FROM public.territories t LEFT JOIN public.publications p ON p.territory_id=t.id GROUP BY t.id ORDER BY t.created_at ASC`);
-    const totals = await db.query(`SELECT COUNT(DISTINCT p.id) as total_publications, COUNT(DISTINCT j.id) as total_journalists, COUNT(DISTINCT a.id) as total_articles, COUNT(DISTINCT ns.id) as total_subscribers FROM public.publications p LEFT JOIN public.journalists j ON j.publication_id=p.id LEFT JOIN public.articles a ON a.publication=p.id AND a.status='published' LEFT JOIN public.newsletter_subscribers ns ON ns.publication_id=p.id AND ns.status='active' WHERE p.status='active'`);
-    return { publications: pubs.rows, territories: territories.rows, totals: totals.rows[0] };
-  } catch (err) {
-    return { publications: [], territories: [], totals: {}, error: err.message };
-  }
-}
+const statusDot = {
+  active: "#22c55e", planned: "#f59e0b", paused: "#6b7280", archived: "#ef4444"
+};
 
 function timeAgo(date) {
   if (!date) return "nunca";
@@ -39,124 +22,164 @@ function timeAgo(date) {
   return "hace " + Math.floor(diff/86400) + "d";
 }
 
-const scopeColors = {
-  national:   { bg: "#7c3aed", border: "#7c3aed" },
-  provincial: { bg: "#1a6b3c", border: "#1a6b3c" },
-  city:       { bg: "#1a4a8a", border: "#1a4a8a" },
-  municipal:  { bg: "#92400e", border: "#92400e" },
-  niche:      { bg: "#5b21b6", border: "#5b21b6" }
-};
+export default function NetworkPage() {
+  const [publications, setPublications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState(null);
+  const [view, setView] = useState("tree");
 
-const scopeLabels = { national: "Nacional", provincial: "Provincial", city: "Ciudad", municipal: "Municipal", niche: "Nicho" };
+  useEffect(() => {
+    fetch("/api/expansion/launch")
+      .then(r => r.json())
+      .then(d => { if (d.ok) setPublications(d.publications); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
-function PubCard({ pub, compact }) {
-  const colors = scopeColors[pub.scope] || scopeColors.city;
-  return (
-    <a href={"/" + pub.slug} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
-      <div style={{ border: "1px solid " + colors.border + "44", borderRadius: 12, padding: compact ? "14px 16px" : "20px", background: "#fff", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: colors.bg }} />
-        <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
-          <span style={{ background: colors.bg, color: "#fff", borderRadius: 4, padding: "1px 8px", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>{scopeLabels[pub.scope] || pub.scope}</span>
-          <span style={{ background: pub.status === "active" ? "#dcfce7" : "#fee2e2", color: pub.status === "active" ? "#15803d" : "#991b1b", borderRadius: 4, padding: "1px 8px", fontSize: 10, fontWeight: 600 }}>{pub.status}</span>
+  const roots = publications.filter(p => !p.parent_id);
+  const getChildren = (parentId) => publications.filter(p => p.parent_id === parentId);
+  const totalArticles = publications.reduce((s, p) => s + parseInt(p.article_count || 0), 0);
+  const totalJournalists = publications.reduce((s, p) => s + parseInt(p.journalist_count || 0), 0);
+  const activeCount = publications.filter(p => p.status === "active").length;
+
+  function PublicationCard({ pub, depth }) {
+    const d = depth || 0;
+    const colors = scopeColors[pub.scope] || scopeColors.city;
+    const kids = getChildren(pub.id);
+    const isSelected = selected && selected.id === pub.id;
+
+    return (
+      <div style={{ marginLeft: d * 32 }}>
+        <div onClick={() => setSelected(isSelected ? null : pub)} style={{ border: "1px solid " + (isSelected ? colors.border : "rgba(255,255,255,0.1)"), borderLeft: "3px solid " + colors.border, borderRadius: 12, padding: "14px 18px", background: isSelected ? colors.bg : "rgba(255,255,255,0.03)", cursor: "pointer", marginBottom: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: statusDot[pub.status] || "#6b7280", flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: 15, color: isSelected ? colors.text : "#e5e7eb" }}>{pub.name}</div>
+              <div style={{ fontSize: 12, opacity: 0.5, marginTop: 2 }}>{pub.territory_name} - {colors.label}{pub.parent_name ? " - hijo de " + pub.parent_name : ""}</div>
+            </div>
+            <div style={{ display: "flex", gap: 16, fontSize: 12, opacity: 0.6 }}>
+              <span>P {pub.journalist_count || 0}</span>
+              <span>Art {pub.article_count || 0}</span>
+              <span>R {pub.run_count || 0}</span>
+            </div>
+            <span style={{ background: colors.bg, color: colors.text, border: "1px solid " + colors.border, borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 600 }}>{colors.label}</span>
+            <span style={{ background: (statusDot[pub.status] || "#6b7280") + "22", color: statusDot[pub.status] || "#6b7280", border: "1px solid " + (statusDot[pub.status] || "#6b7280") + "44", borderRadius: 6, padding: "2px 8px", fontSize: 11 }}>{pub.status}</span>
+          </div>
+          {isSelected && (
+            <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(130px,1fr))", gap: 12, marginBottom: 12 }}>
+                {[{ label: "Articulos", value: pub.article_count || 0, color: "#22c55e" }, { label: "Periodistas IA", value: pub.journalist_count || 0, color: "#3b82f6" }, { label: "Categorias", value: pub.category_count || 0, color: "#f59e0b" }, { label: "Runs", value: pub.run_count || 0, color: "#8b5cf6" }].map((stat, i) => (
+                  <div key={i} style={{ background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: "10px 14px" }}>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: stat.color }}>{stat.value}</div>
+                    <div style={{ fontSize: 11, opacity: 0.5, marginTop: 2 }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+              {pub.description && <p style={{ fontSize: 13, opacity: 0.6, margin: "0 0 8px", fontStyle: "italic" }}>{pub.description}</p>}
+              {pub.last_run && <p style={{ fontSize: 12, opacity: 0.4, margin: "0 0 12px" }}>Ultimo pipeline: {timeAgo(pub.last_run)}</p>}
+              <div style={{ display: "flex", gap: 10 }}>
+                <a href={"/" + pub.slug} target="_blank" rel="noopener noreferrer" style={{ background: colors.border + "33", color: colors.text, border: "1px solid " + colors.border + "55", borderRadius: 8, padding: "6px 14px", fontSize: 12, textDecoration: "none", fontWeight: 600 }}>Ver diario</a>
+                <a href="/president" style={{ background: "rgba(255,255,255,0.05)", color: "#93c5fd", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, padding: "6px 14px", fontSize: 12, textDecoration: "none" }}>Gestionar con President</a>
+              </div>
+            </div>
+          )}
         </div>
-        <h3 style={{ fontSize: compact ? 15 : 18, fontWeight: 800, margin: "0 0 4px", color: "#111", fontFamily: "Georgia, serif", lineHeight: 1.2 }}>{pub.name}</h3>
-        <p style={{ fontSize: 12, color: "#666", margin: "0 0 10px" }}>{pub.territory_name}</p>
-        {pub.description && !compact && <p style={{ fontSize: 13, color: "#555", margin: "0 0 12px", lineHeight: 1.5 }}>{pub.description}</p>}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 6 }}>
-          {[["articulos", parseInt(pub.article_count||0)], ["periodistas", parseInt(pub.journalist_count||0)], ["categorias", parseInt(pub.category_count||0)], ["suscriptores", parseInt(pub.subscriber_count||0)]].map(([label, value], i) => (
-            <div key={i} style={{ textAlign: "center", padding: "5px 4px", background: "#f9fafb", borderRadius: 6 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, color: colors.bg }}>{value}</div>
-              <div style={{ fontSize: 10, color: "#888" }}>{label}</div>
+        {kids.length > 0 && (
+          <div style={{ borderLeft: "1px dashed rgba(255,255,255,0.1)", marginLeft: 16, paddingLeft: 16, marginBottom: 8 }}>
+            {kids.map(kid => <PublicationCard key={kid.id} pub={kid} depth={d + 1} />)}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#0b1020", color: "#e5e7eb", paddingBottom: 60 }}>
+      <div style={{ padding: "20px 32px", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <a href="/" style={{ color: "#93c5fd", textDecoration: "none", fontSize: 13 }}>- Atlas</a>
+          <div style={{ width: 1, height: 20, background: "rgba(255,255,255,0.15)" }} />
+          <span style={{ fontWeight: 700, fontSize: 16 }}>Red de medios</span>
+          <span style={{ background: "#22c55e22", color: "#22c55e", border: "1px solid #22c55e44", borderRadius: 6, padding: "2px 8px", fontSize: 11, fontWeight: 600 }}>{activeCount} activos</span>
+        </div>
+        <div style={{ display: "flex", gap: 8 }}>
+          {["tree", "grid"].map(v => (
+            <button key={v} onClick={() => setView(v)} style={{ background: view === v ? "rgba(255,255,255,0.1)" : "none", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, padding: "6px 14px", color: view === v ? "#fff" : "#9ca3af", cursor: "pointer", fontSize: 13 }}>
+              {v === "tree" ? "Jerarquia" : "Grilla"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "28px 32px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 14, marginBottom: 32 }}>
+          {[{ label: "Total de medios", value: publications.length, color: "#8b5cf6" }, { label: "Medios activos", value: activeCount, color: "#22c55e" }, { label: "Total articulos", value: totalArticles.toLocaleString(), color: "#3b82f6" }, { label: "Periodistas IA", value: totalJournalists, color: "#f59e0b" }].map((kpi, i) => (
+            <div key={i} style={{ border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 16, background: "rgba(255,255,255,0.03)", textAlign: "center" }}>
+              <div style={{ fontSize: 28, fontWeight: 700, color: kpi.color, marginBottom: 4 }}>{kpi.value}</div>
+              <div style={{ fontSize: 11, opacity: 0.5 }}>{kpi.label}</div>
             </div>
           ))}
         </div>
-        <div style={{ marginTop: 8, fontSize: 11, color: "#aaa" }}>
-          Ultimo pipeline: {timeAgo(pub.last_run)}{pub.last_run_articles ? " (" + pub.last_run_articles + " art.)" : ""}
-          {pub.parent_name && <span style={{ marginLeft: 8 }}>parte de {pub.parent_name}</span>}
-        </div>
-      </div>
-    </a>
-  );
-}
 
-export default async function NetworkPage() {
-  const { publications, territories, totals, error } = await getNetworkData();
-  const nationals   = publications.filter(p => p.scope === "national");
-  const provincials = publications.filter(p => p.scope === "provincial");
-  const cities      = publications.filter(p => p.scope === "city");
-  const municipals  = publications.filter(p => p.scope === "municipal");
-  const niches      = publications.filter(p => p.scope === "niche");
-
-  const sections = [
-    { list: nationals,   color: "#7c3aed", label: "Medios Nacionales",   cols: "repeat(auto-fill,minmax(360px,1fr))", compact: false },
-    { list: provincials, color: "#1a6b3c", label: "Medios Provinciales",  cols: "repeat(auto-fill,minmax(340px,1fr))", compact: false },
-    { list: cities,      color: "#1a4a8a", label: "Medios de Ciudad",     cols: "repeat(auto-fill,minmax(300px,1fr))", compact: true },
-    { list: municipals,  color: "#92400e", label: "Medios Municipales",   cols: "repeat(auto-fill,minmax(280px,1fr))", compact: true },
-    { list: niches,      color: "#5b21b6", label: "Publicaciones de Nicho", cols: "repeat(auto-fill,minmax(280px,1fr))", compact: true }
-  ];
-
-  return (
-    <div style={{ background: "#f8fafc", minHeight: "100vh", fontFamily: "Arial, sans-serif" }}>
-      <div style={{ background: "#111", color: "#fff", padding: "20px 32px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <a href="/" style={{ color: "#93c5fd", textDecoration: "none", fontSize: 13 }}>- Atlas Media Network</a>
-          <h1 style={{ fontSize: 36, fontWeight: 900, margin: "12px 0 4px", fontFamily: "Georgia, serif" }}>Red de Medios</h1>
-          <p style={{ opacity: 0.5, margin: 0, fontSize: 14 }}>Mapa completo del holding Atlas Media Network</p>
-        </div>
-      </div>
-
-      <div style={{ background: "#fff", borderBottom: "1px solid #e5e7eb" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 32px", display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 24 }}>
-          {[
-            { label: "Publicaciones activas", value: parseInt(totals?.total_publications||0), color: "#7c3aed" },
-            { label: "Periodistas IA", value: parseInt(totals?.total_journalists||0), color: "#1a6b3c" },
-            { label: "Articulos publicados", value: parseInt(totals?.total_articles||0), color: "#1a4a8a" },
-            { label: "Suscriptores newsletter", value: parseInt(totals?.total_subscribers||0), color: "#92400e" },
-            { label: "Territorios cubiertos", value: territories.length, color: "#111" }
-          ].map((kpi, i) => (
-            <div key={i} style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 32, fontWeight: 900, color: kpi.color }}>{kpi.value.toLocaleString()}</div>
-              <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>{kpi.label}</div>
+        <div style={{ display: "flex", gap: 16, marginBottom: 24, flexWrap: "wrap" }}>
+          {Object.entries(scopeColors).map(([scope, colors]) => (
+            <div key={scope} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, opacity: 0.7 }}>
+              <div style={{ width: 12, height: 12, borderRadius: 2, background: colors.border }} />
+              <span>{colors.label}</span>
             </div>
           ))}
         </div>
-      </div>
 
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 32px 80px" }}>
-        {error && <div style={{ background: "#fee2e2", border: "1px solid #fca5a5", borderRadius: 10, padding: 16, marginBottom: 24, color: "#991b1b" }}>Error: {error}</div>}
+        {loading && <p style={{ opacity: 0.5, textAlign: "center", padding: 40 }}>Cargando red de medios...</p>}
 
-        {sections.map(({ list, color, label, cols, compact }) => list.length > 0 && (
-          <section key={label} style={{ marginBottom: 40 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-              <div style={{ width: 4, height: 28, background: color, borderRadius: 2 }} />
-              <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0, color: "#111" }}>{label}</h2>
-              <span style={{ fontSize: 13, color: "#888" }}>{list.length} publicacion{list.length !== 1 ? "es" : ""}</span>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: cols, gap: 16 }}>
-              {list.map(pub => <PubCard key={pub.id} pub={pub} compact={compact} />)}
-            </div>
-          </section>
-        ))}
-
-        {publications.length === 0 && !error && (
-          <div style={{ textAlign: "center", padding: "80px 0", color: "#888" }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🌎</div>
-            <p style={{ fontSize: 20, fontWeight: 700, color: "#111" }}>Red en construccion</p>
-            <p style={{ fontSize: 14 }}>El AI Expansion Director esta analizando mercados.</p>
+        {!loading && publications.length === 0 && (
+          <div style={{ textAlign: "center", padding: "60px 0", opacity: 0.4 }}>
+            <p style={{ fontSize: 20 }}>No hay publicaciones todavia</p>
+            <p style={{ fontSize: 14 }}>El AI Expansion Director lanzara medios automaticamente cada lunes</p>
           </div>
         )}
 
-        <div style={{ marginTop: 40, padding: "20px 24px", background: "#fff", borderRadius: 12, border: "1px solid #e5e7eb" }}>
-          <h3 style={{ fontSize: 13, fontWeight: 700, margin: "0 0 12px", color: "#888", textTransform: "uppercase", letterSpacing: 1 }}>Referencias</h3>
-          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-            {Object.entries(scopeLabels).map(([scope, label]) => (
-              <div key={scope} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <div style={{ width: 12, height: 12, borderRadius: 2, background: scopeColors[scope]?.bg }} />
-                <span style={{ fontSize: 13, color: "#555" }}>{label}</span>
+        {!loading && view === "tree" && publications.length > 0 && (
+          <div>
+            <div style={{ border: "1px solid rgba(255,255,255,0.15)", borderRadius: 14, padding: "16px 20px", background: "rgba(255,255,255,0.05)", marginBottom: 16, display: "flex", alignItems: "center", gap: 16 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 10, background: "linear-gradient(135deg,#4f46e5,#7c3aed)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: "#fff" }}>A</div>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: 18 }}>Atlas Media Network</div>
+                <div style={{ fontSize: 12, opacity: 0.5 }}>Holding invisible - {publications.length} publicaciones - {totalJournalists} periodistas IA</div>
               </div>
-            ))}
+            </div>
+            <div style={{ borderLeft: "2px dashed rgba(255,255,255,0.1)", marginLeft: 22, paddingLeft: 22, paddingBottom: 8 }}>
+              {roots.map(pub => <PublicationCard key={pub.id} pub={pub} depth={0} />)}
+            </div>
           </div>
-        </div>
+        )}
+
+        {!loading && view === "grid" && publications.length > 0 && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: 16 }}>
+            {publications.map(pub => {
+              const colors = scopeColors[pub.scope] || scopeColors.city;
+              return (
+                <a key={pub.id} href={"/" + pub.slug} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
+                  <div style={{ border: "1px solid " + colors.border + "55", borderTop: "3px solid " + colors.border, borderRadius: 12, padding: 18, background: "rgba(255,255,255,0.02)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 15, color: "#e5e7eb", marginBottom: 3 }}>{pub.name}</div>
+                        <div style={{ fontSize: 11, opacity: 0.5 }}>{pub.territory_name}</div>
+                      </div>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: statusDot[pub.status] || "#6b7280", marginTop: 4 }} />
+                    </div>
+                    <div style={{ display: "flex", gap: 16, fontSize: 12, opacity: 0.6 }}>
+                      <span>P {pub.journalist_count || 0}</span>
+                      <span>Art {pub.article_count || 0}</span>
+                      <span style={{ color: colors.text }}>{colors.label}</span>
+                    </div>
+                    {pub.description && <p style={{ fontSize: 12, opacity: 0.5, margin: "8px 0 0", lineHeight: 1.4, fontStyle: "italic" }}>{pub.description?.slice(0, 80)}</p>}
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
