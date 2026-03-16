@@ -25,3 +25,27 @@ export async function GET(request) {
     return NextResponse.json({ ok: true, journalists: result.rows });
   } catch (error) { return NextResponse.json({ ok: false, error: error.message }, { status: 500 }); }
 }
+
+export async function PATCH(request) {
+  try {
+    const adminToken = process.env.ATLAS_ADMIN_TOKEN;
+    if (!adminToken || request.headers.get("x-atlas-admin-token") !== adminToken) return NextResponse.json({ ok: false, error: "UNAUTHORIZED" }, { status: 401 });
+    const body = await request.json();
+    const { id, name, role, bio, tone, style, beat, personality, active } = body;
+    const db = getDb();
+    const updates = []; const values = []; let idx = 1;
+    if (name !== undefined) { updates.push("name=$"+idx); values.push(name); idx++; }
+    if (role !== undefined) { updates.push("role=$"+idx); values.push(role); idx++; }
+    if (bio !== undefined) { updates.push("bio=$"+idx); values.push(bio); idx++; }
+    if (tone !== undefined) { updates.push("tone=$"+idx); values.push(tone); idx++; }
+    if (style !== undefined) { updates.push("style=$"+idx); values.push(style); idx++; }
+    if (beat !== undefined) { updates.push("beat=$"+idx); values.push(beat); idx++; }
+    if (personality !== undefined) { updates.push("personality=$"+idx); values.push(personality); idx++; }
+    if (active !== undefined) { updates.push("active=$"+idx); values.push(active); idx++; }
+    if (!updates.length) return NextResponse.json({ ok: false, error: "NOTHING_TO_UPDATE" }, { status: 400 });
+    values.push(id);
+    const result = await db.query("UPDATE public.journalists SET "+updates.join(",")+" WHERE id=$"+idx+" RETURNING *", values);
+    if (!result.rows.length) return NextResponse.json({ ok: false, error: "NOT_FOUND" }, { status: 404 });
+    return NextResponse.json({ ok: true, journalist: result.rows[0] });
+  } catch (error) { return NextResponse.json({ ok: false, error: error.message }, { status: 500 }); }
+}
