@@ -2,6 +2,7 @@ import { getArticleBySlug, getArticlesByPublication } from "../../../lib/article
 import Comments from "../../../components/Comments";
 import PushNotifications from "../../../components/PushNotifications";
 import AbTracker from "../../../components/AbTracker";
+import LazyImage from "../../../components/LazyImage";
 import Analytics from "../../../components/Analytics";
 import NewsletterForm from "../../../components/NewsletterForm";
 import { notFound } from "next/navigation";

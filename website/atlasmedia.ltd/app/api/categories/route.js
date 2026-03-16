@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "../../../lib/db";
+import { withCache } from "../../../lib/cache";
 
 export const dynamic = "force-dynamic";
 

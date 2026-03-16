@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
+import { ArticleCardSkeleton } from "../../components/Skeleton";
 import { useSearchParams, useRouter } from "next/navigation";
 
 function timeAgo(date) {
