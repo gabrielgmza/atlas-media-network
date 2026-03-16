@@ -1,6 +1,7 @@
 import { getArticleBySlug, getArticlesByPublication } from "../../../lib/articles";
 import Comments from "../../../components/Comments";
 import PushNotifications from "../../../components/PushNotifications";
+import AbTracker from "../../../components/AbTracker";
 import Analytics from "../../../components/Analytics";
 import NewsletterForm from "../../../components/NewsletterForm";
 import { notFound } from "next/navigation";
@@ -172,6 +173,7 @@ export default async function ArticlePage({ params }) {
         <NewsletterForm publicationId={pubSlug} accentColor={accentColor} />
       </div>
       <Comments articleId={article.id} articleSlug={article.slug} publicationId={pubSlug} accentColor={accentColor} />
+      <AbTracker articleSlug={article.slug} />
       <Analytics publicationId={pubSlug} articleSlug={article.slug} articleId={article.id} />
       <footer style={{ background: "#111", color: "#fff", padding: "32px 24px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
