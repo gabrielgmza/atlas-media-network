@@ -1,4 +1,6 @@
 import { getArticlesByPublication } from "../../lib/articles";
+import Analytics from "../../components/Analytics";
+import NewsletterForm from "../../components/NewsletterForm";
 import { getDb } from "../../lib/db";
 
 export const dynamic = "force-dynamic";
@@ -144,6 +146,10 @@ export default async function ArgentinaPostMendozaPage() {
         )}
       </main>
 
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
+        <NewsletterForm publicationId="argentina-post-mendoza" accentColor="#1a6b3c" />
+      </div>
+      <Analytics publicationId="argentina-post-mendoza" />
       <footer style={{ background: accentColor, color: "#fff", padding: "32px 24px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
           <div>

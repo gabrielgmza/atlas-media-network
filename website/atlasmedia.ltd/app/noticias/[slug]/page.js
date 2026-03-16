@@ -1,4 +1,6 @@
 import { getArticleBySlug, getArticlesByPublication } from "../../../lib/articles";
+import Analytics from "../../../components/Analytics";
+import NewsletterForm from "../../../components/NewsletterForm";
 import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -163,6 +165,10 @@ export default async function ArticlePage({ params }) {
         </aside>
       </div>
 
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
+        <NewsletterForm publicationId={pubSlug} accentColor={accentColor} />
+      </div>
+      <Analytics publicationId={pubSlug} articleSlug={article.slug} articleId={article.id} />
       <footer style={{ background: "#111", color: "#fff", padding: "32px 24px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
           <div>

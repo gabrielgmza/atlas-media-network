@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import Analytics from "../../components/Analytics";
+import NewsletterForm from "../../components/NewsletterForm";
 import { getDb } from "../../lib/db";
 import { getArticlesByPublication } from "../../lib/articles";
 
