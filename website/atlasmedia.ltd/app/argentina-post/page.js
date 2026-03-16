@@ -59,10 +59,10 @@ export default async function ArgentinaPostPage() {
           <a href="/periodistas" style={{ padding: "10px 16px", fontSize: 13, color: "#444", textDecoration: "none", fontFamily: "Arial, sans-serif", whiteSpace: "nowrap" }}>Redaccion</a>
           <a href="/buscar?publication=argentina-post" style={{ padding: "10px 16px", fontSize: 13, color: "#444", textDecoration: "none", fontFamily: "Arial, sans-serif", whiteSpace: "nowrap", marginLeft: "auto" }}>Buscar</a>
           {categories.map(cat => (
-            <a key={cat.slug} href={`/argentina-post?cat=${cat.slug}`} style={{ padding: "10px 16px", fontSize: 13, color: "#444", textDecoration: "none", fontFamily: "Arial, sans-serif", whiteSpace: "nowrap" }}>{cat.name}</a>
+            <a key={cat.slug} href={`/argentina-post/categoria/${cat.name}`} style={{ padding: "10px 16px", fontSize: 13, color: "#444", textDecoration: "none", fontFamily: "Arial, sans-serif", whiteSpace: "nowrap" }}>{cat.name}</a>
           ))}
           {!categories.length && ["Política", "Economía", "Sociedad", "Internacionales", "Tecnología", "Deportes"].map(cat => (
-            <a key={cat} href="#" style={{ padding: "10px 16px", fontSize: 13, color: "#444", textDecoration: "none", fontFamily: "Arial, sans-serif", whiteSpace: "nowrap" }}>{cat}</a>
+            <a key={cat} href={`/argentina-post/categoria/${cat}`} style={{ padding: "10px 16px", fontSize: 13, color: "#444", textDecoration: "none", fontFamily: "Arial, sans-serif", whiteSpace: "nowrap" }}>{cat}</a>
           ))}
         </div>
       </nav>

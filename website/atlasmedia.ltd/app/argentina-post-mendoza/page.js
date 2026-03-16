@@ -58,10 +58,10 @@ export default async function ArgentinaPostMendozaPage() {
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", display: "flex", gap: 0, overflowX: "auto" }}>
           <a href="/argentina-post-mendoza" style={{ padding: "10px 16px", fontSize: 13, fontWeight: 700, color: accentColor, textDecoration: "none", borderBottom: `2px solid ${accentColor}`, fontFamily: "Arial, sans-serif", whiteSpace: "nowrap" }}>Inicio</a>
           {categories.map(cat => (
-            <a key={cat.slug} href="#" style={{ padding: "10px 16px", fontSize: 13, color: "#444", textDecoration: "none", fontFamily: "Arial, sans-serif", whiteSpace: "nowrap" }}>{cat.name}</a>
+            <a key={cat.slug} href={`/argentina-post-mendoza/categoria/${cat.name}`} style={{ padding: "10px 16px", fontSize: 13, color: "#444", textDecoration: "none", fontFamily: "Arial, sans-serif", whiteSpace: "nowrap" }}>{cat.name}</a>
           ))}
           {!categories.length && ["Política", "Economía", "Policiales", "Sociedad", "Turismo", "Cultura", "Deportes"].map(cat => (
-            <a key={cat} href="#" style={{ padding: "10px 16px", fontSize: 13, color: "#444", textDecoration: "none", fontFamily: "Arial, sans-serif", whiteSpace: "nowrap" }}>{cat}</a>
+            <a key={cat} href={`/argentina-post-mendoza/categoria/${cat}`} style={{ padding: "10px 16px", fontSize: 13, color: "#444", textDecoration: "none", fontFamily: "Arial, sans-serif", whiteSpace: "nowrap" }}>{cat}</a>
           ))}
         </div>
       </nav>
