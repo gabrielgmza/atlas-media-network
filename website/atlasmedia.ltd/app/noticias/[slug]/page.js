@@ -1,5 +1,6 @@
 import { getArticleBySlug, getArticlesByPublication } from "../../../lib/articles";
 import Comments from "../../../components/Comments";
+import PushNotifications from "../../../components/PushNotifications";
 import Analytics from "../../../components/Analytics";
 import NewsletterForm from "../../../components/NewsletterForm";
 import { notFound } from "next/navigation";
@@ -97,6 +98,7 @@ export default async function ArticlePage({ params }) {
             {article.excerpt}
           </p>
 
+          <PushNotifications publicationId={pubSlug} accentColor={accentColor} />
           <div style={{ display: "flex", alignItems: "center", gap: 16, paddingBottom: 16, borderBottom: "1px solid #eee", marginBottom: 24, fontFamily: "Arial, sans-serif" }}>
             <div style={{ width: 40, height: 40, borderRadius: "50%", background: accentColor, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, flexShrink: 0 }}>
               {article.author?.charAt(0) || "A"}

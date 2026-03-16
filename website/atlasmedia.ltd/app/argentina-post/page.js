@@ -1,5 +1,6 @@
 import { getArticlesByPublication } from "../../lib/articles";
 import Analytics from "../../components/Analytics";
+import PushNotifications from "../../components/PushNotifications";
 import NewsletterForm from "../../components/NewsletterForm";
 import { getDb } from "../../lib/db";
 
@@ -50,6 +51,7 @@ export default async function ArgentinaPostPage() {
         <div style={{ maxWidth: 1200, margin: "0 auto", textAlign: "center" }}>
           <h1 style={{ fontSize: 64, fontWeight: 900, margin: "0 0 4px", letterSpacing: -2, fontFamily: "Georgia, serif" }}>Argentina Post</h1>
           <p style={{ fontSize: 13, opacity: 0.5, margin: 0, letterSpacing: 2, textTransform: "uppercase" }}>El diario digital de Argentina</p>
+          <div style={{ marginTop: 8, display: "flex", justifyContent: "center" }}><PushNotifications publicationId="argentina-post" accentColor="#cc0000" /></div>
         </div>
       </header>
 
