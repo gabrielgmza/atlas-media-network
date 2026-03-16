@@ -1,4 +1,5 @@
 import { getArticleBySlug, getArticlesByPublication } from "../../../lib/articles";
+import Comments from "../../../components/Comments";
 import Analytics from "../../../components/Analytics";
 import NewsletterForm from "../../../components/NewsletterForm";
 import { notFound } from "next/navigation";
@@ -168,6 +169,7 @@ export default async function ArticlePage({ params }) {
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
         <NewsletterForm publicationId={pubSlug} accentColor={accentColor} />
       </div>
+      <Comments articleId={article.id} articleSlug={article.slug} publicationId={pubSlug} accentColor={accentColor} />
       <Analytics publicationId={pubSlug} articleSlug={article.slug} articleId={article.id} />
       <footer style={{ background: "#111", color: "#fff", padding: "32px 24px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
