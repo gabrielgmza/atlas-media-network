@@ -1,6 +1,4 @@
 import { notFound } from "next/navigation";
-import Analytics from "../../components/Analytics";
-import NewsletterForm from "../../components/NewsletterForm";
 import { getDb } from "../../lib/db";
 import { getArticlesByPublication } from "../../lib/articles";
 
@@ -99,9 +97,9 @@ export default async function PublicationPage({ params }) {
 
       <nav style={{ borderBottom:"1px solid #ddd" }}>
         <div style={{ maxWidth:1200, margin:"0 auto", padding:"0 24px", display:"flex", overflowX:"auto" }}>
-          <a href={"/"+slug} style={{ padding:"10px 16px", fontSize:13, fontWeight:700, color:accentColor, textDecoration:"none", borderBottom:"2px solid "+accentColor, fontFamily:"Arial, sans-serif", whiteSpace:"nowrap" }}>Inicio</a><a href={"/"+slug+"/acerca-de"} style={{ padding:"10px 16px", fontSize:13, color:"#444", textDecoration:"none", fontFamily:"Arial, sans-serif", whiteSpace:"nowrap" }}>Acerca de</a>
+          <a href={"/"+slug} style={{ padding:"10px 16px", fontSize:13, fontWeight:700, color:accentColor, textDecoration:"none", borderBottom:"2px solid "+accentColor, fontFamily:"Arial, sans-serif", whiteSpace:"nowrap" }}>Inicio</a>
           {categories.map(cat => (
-            <a key={cat.slug} href={`/${slug}/categoria/${cat.name}`} style={{ padding:"10px 16px", fontSize:13, color:"#444", textDecoration:"none", fontFamily:"Arial, sans-serif", whiteSpace:"nowrap" }}>{cat.name}</a>
+            <a key={cat.slug} href="#" style={{ padding:"10px 16px", fontSize:13, color:"#444", textDecoration:"none", fontFamily:"Arial, sans-serif", whiteSpace:"nowrap" }}>{cat.name}</a>
           ))}
         </div>
       </nav>
