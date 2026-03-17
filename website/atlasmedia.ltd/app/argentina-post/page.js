@@ -2,6 +2,7 @@ import { getArticlesByPublication } from "../../lib/articles";
 import Analytics from "../../components/Analytics";
 import PushNotifications from "../../components/PushNotifications";
 import NewsletterForm from "../../components/NewsletterForm";
+import AdSlot from "../../components/AdSlot";
 import { getDb } from "../../lib/db";
 
 export const dynamic = "force-dynamic";
