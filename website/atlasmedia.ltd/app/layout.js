@@ -1,4 +1,8 @@
+import { Suspense } from "react";
+import GoogleAnalytics from "../components/GoogleAnalytics";
+
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://atlas-media-network.vercel.app";
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-KZRFZEJSZV";
 
 export const metadata = {
   metadataBase: new URL(BASE_URL),
@@ -11,31 +15,20 @@ export const metadata = {
   alternates: { canonical: BASE_URL }
 };
 
-const websiteSchema = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: "Atlas Media Network",
-  url: BASE_URL,
-  inLanguage: "es-AR",
-  potentialAction: { "@type": "SearchAction", target: { "@type": "EntryPoint", urlTemplate: BASE_URL + "/buscar?q={search_term_string}" }, "query-input": "required name=search_term_string" }
-};
-
-const orgSchema = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "Atlas Media Network",
-  url: BASE_URL,
-  description: "Holding de medios digitales automatizados con IA editorial en Argentina."
-};
+const websiteSchema = { "@context":"https://schema.org","@type":"WebSite",name:"Atlas Media Network",url:BASE_URL,inLanguage:"es-AR",potentialAction:{"@type":"SearchAction",target:{"@type":"EntryPoint",urlTemplate:BASE_URL+"/buscar?q={search_term_string}"},"query-input":"required name=search_term_string"} };
+const orgSchema = { "@context":"https://schema.org","@type":"Organization",name:"Atlas Media Network",url:BASE_URL,description:"Holding de medios digitales automatizados con IA editorial en Argentina." };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <head>
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} />
+        <script dangerouslySetInnerHTML={{ __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_ID}',{page_path:window.location.pathname,send_page_view:true});` }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }} />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }} />
       </head>
-      <body style={{ margin: 0, fontFamily: "Inter, Arial, sans-serif", background: "#0b1020", color: "#e5e7eb" }}>
+      <body style={{ margin:0,fontFamily:"Inter, Arial, sans-serif",background:"#0b1020",color:"#e5e7eb" }}>
+        <Suspense fallback={null}><GoogleAnalytics /></Suspense>
         {children}
       </body>
     </html>
