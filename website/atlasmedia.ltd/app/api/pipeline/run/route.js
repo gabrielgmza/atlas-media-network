@@ -191,6 +191,10 @@ export async function POST(request) {
         for (const b of breaking) {
           await createAlert({ type: "breaking_news", title: "Breaking: " + b.title, detail: b.reason, publicationId: publication.id, severity: "high" });
           await sendEmailAlert({ type: "breaking_news", title: "Breaking: " + b.title, detail: b.reason, severity: "high" });
+          const BASE_URL_PUSH = process.env.NEXT_PUBLIC_SITE_URL||"https://atlas-media-network.vercel.app";
+          fetch(BASE_URL_PUSH+"/api/push",{method:"POST",headers:{"Content-Type":"application/json","x-atlas-admin-token":process.env.ATLAS_ADMIN_TOKEN||""},body:JSON.stringify({action:"send",publicationId:publication.id,title:"Breaking: "+b.title,body:b.reason,url:"/noticias/"+(publishedArticles[0]?.slug||""),breaking:true})}).catch(()=>{});
+          const BASE_URL_PUSH = process.env.NEXT_PUBLIC_SITE_URL||"https://atlas-media-network.vercel.app";
+          fetch(BASE_URL_PUSH+"/api/push",{method:"POST",headers:{"Content-Type":"application/json","x-atlas-admin-token":process.env.ATLAS_ADMIN_TOKEN||""},body:JSON.stringify({action:"send",publicationId:publication.id,title:"Breaking: "+b.title,body:b.reason,url:"/noticias/"+(publishedArticles[0]?.slug||""),breaking:true})}).catch(()=>{});
         }
       }).catch(() => {});
     }
